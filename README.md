@@ -1,2 +1,7 @@
 # nonbox
-NaN boxing without boxing
+
+NaN boxing without boxing.
+
+## License
+
+[The Unlicense](UNLICENSE)

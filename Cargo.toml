@@ -1,0 +1,8 @@
+[package]
+name = "nonbox"
+description = "NaN boxing without boxing"
+version = "0.1.0"
+edition = "2021"
+license-file = "./UNLICENSE"
+
+[dependencies]
