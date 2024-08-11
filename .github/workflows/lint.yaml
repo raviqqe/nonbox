@@ -9,8 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy -- -D warnings
   format:
@@ -22,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: streetsidesoftware/cspell-action@main
+      - uses: streetsidesoftware/cspell-action@v6
         with:
           files: "**/*.{md,rs}"
   readme:
