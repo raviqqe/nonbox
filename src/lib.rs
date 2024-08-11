@@ -1,1 +1,1 @@
-//! A library for NaN boxing without boxing.
+#![doc = include_str!("../README.md")]
