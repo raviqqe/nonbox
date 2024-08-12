@@ -10,7 +10,7 @@ pub const EXPONENT_MASK_OFFSET: usize = 48;
 /// An exponent mask.
 pub const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
 
-/// A value mask.
+/// A boxed value mask.
 pub const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 
 /// Boxes a value.
@@ -20,6 +20,7 @@ pub fn r#box(value: u64) -> f64 {
     f64::from_bits(EXPONENT_MASK | value)
 }
 
+/// Unboxes a value.
 pub fn unbox(number: f64) -> Option<u64> {
     number
         .is_nan()
