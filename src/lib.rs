@@ -14,7 +14,7 @@ pub const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 
 /// Boxes a value.
 ///
-/// The `value` needs to be less than `1 << 52`. Otherwise, it is truncated.
+/// The `value` needs to be less than `1 << 51`. Otherwise, it is truncated.
 pub fn r#box(value: u64) -> f64 {
     f64::from_bits(EXPONENT_MASK | value)
 }
