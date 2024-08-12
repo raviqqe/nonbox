@@ -24,7 +24,7 @@ pub fn unbox(number: f64) -> Option<u64> {
 }
 
 /// Boxes a signed value into `f64`.
-pub fn r#box_signed(value: i64) -> f64 {
+pub fn box_signed(value: i64) -> f64 {
     f64::from_bits((if value < 0 { SIGN_MASK } else { 0 }) | box_u64(value.abs() as u64))
 }
 
