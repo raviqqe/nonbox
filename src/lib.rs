@@ -24,7 +24,7 @@ pub fn unbox(number: f64) -> Option<u64> {
 
 /// Boxes a signed value into `f64`.
 pub fn r#box_signed(value: i64) -> f64 {
-    (if value < 0 { -1.0 } else { 1.0 }) * r#box(value as u64)
+    (if value < 0 { -1.0 } else { 1.0 }) * r#box(value.abs() as u64)
 }
 
 /// Unboxes a signed value from `f64`.
