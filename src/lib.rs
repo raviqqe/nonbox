@@ -23,8 +23,8 @@ pub fn unbox(number: f64) -> Option<u64> {
 }
 
 /// Boxes a value into `u64` representation of `f64`.
-pub fn box_u64(value: u64) -> f64 {
-    f64::from_bits(EXPONENT_MASK | value)
+pub fn box_u64(value: u64) -> u64 {
+    f64::from_bits(EXPONENT_MASK | value).to_bits()
 }
 
 /// Unboxes a value from `u64` representation of `f64`.
