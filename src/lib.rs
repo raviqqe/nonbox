@@ -64,4 +64,13 @@ mod tests {
         assert_eq!(unbox(1.0), None);
         assert_eq!(unbox(42.0), None);
     }
+
+    #[test]
+    fn unbox_value_in_u64() {
+        assert_eq!(unbox_u64(42.0f64.to_bits()), None);
+        assert_eq!(unbox_u64(r#box_u64(0)), Some(0));
+        assert_eq!(unbox_u64(r#box_u64(1)), Some(1));
+        assert_eq!(unbox_u64(r#box_u64(7)), Some(7));
+        assert_eq!(unbox_u64(r#box_u64(42)), Some(42));
+    }
 }
