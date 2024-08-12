@@ -4,18 +4,13 @@
 #[cfg(test)]
 extern crate std;
 
-/// An offset to an exponent mask.
-pub const EXPONENT_MASK_OFFSET: usize = 48;
-
-/// An exponent mask.
-pub const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
-
-/// A boxed value mask.
-pub const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
+const EXPONENT_MASK_OFFSET: usize = 48;
+const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
+const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 
 /// Boxes a value.
 ///
-/// The `value` needs to be less than `1 << 52`. Otherwise, it is truncated.
+/// The `value` needs to be less than `1 << 51`. Otherwise, it is truncated.
 pub fn r#box(value: u64) -> f64 {
     f64::from_bits(EXPONENT_MASK | value)
 }
@@ -38,6 +33,9 @@ mod tests {
 
     #[test]
     fn box_value() {
+        assert!(r#box(0).is_nan());
+        assert!(r#box(1).is_nan());
+        assert!(r#box(7).is_nan());
         assert!(r#box(42).is_nan());
     }
 
