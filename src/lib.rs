@@ -8,18 +8,28 @@ const EXPONENT_MASK_OFFSET: usize = 48;
 const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
 const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 
-/// Boxes a value into `f64`.
+/// Boxes an unsigned value into `f64`.
 ///
 /// The `value` needs to be less than `1 << 51`. Otherwise, it is truncated.
 pub fn r#box(value: u64) -> f64 {
     f64::from_bits(EXPONENT_MASK | value)
 }
 
-/// Unboxes a value from `f64`.
+/// Unboxes an unsigned value from `f64`.
 pub fn unbox(number: f64) -> Option<u64> {
     number
         .is_nan()
         .then_some(number.to_bits() & BOXED_VALUE_MASK)
+}
+
+/// Boxes a signed value into `f64`.
+pub fn r#box_signed(value: i64) -> f64 {
+    (if value < 0 { -1.0 } else { 1.0 }) * r#box(value as u64)
+}
+
+/// Unboxes a signed value from `f64`.
+pub fn unbox_signed(number: f64) -> Option<i64> {
+    unbox(number).map(|value| (if number < 0.0 { -1 } else { 1 }) * (value as i64))
 }
 
 /// Boxes a value into `u64` representation of `f64`.
@@ -42,7 +52,7 @@ mod tests {
     }
 
     #[test]
-    fn box_value() {
+    fn box_unsigned_value() {
         assert!(r#box(0).is_nan());
         assert!(r#box(1).is_nan());
         assert!(r#box(7).is_nan());
@@ -50,11 +60,33 @@ mod tests {
     }
 
     #[test]
-    fn unbox_value() {
+    fn unbox_unsigned_value() {
         assert_eq!(unbox(r#box(0)), Some(0));
         assert_eq!(unbox(r#box(1)), Some(1));
         assert_eq!(unbox(r#box(7)), Some(7));
         assert_eq!(unbox(r#box(42)), Some(42));
+    }
+
+    #[test]
+    fn box_signed_value() {
+        assert!(r#box_signed(0).is_nan());
+        assert!(r#box_signed(1).is_nan());
+        assert!(r#box_signed(7).is_nan());
+        assert!(r#box_signed(42).is_nan());
+        assert!(r#box_signed(-1).is_nan());
+        assert!(r#box_signed(-7).is_nan());
+        assert!(r#box_signed(-42).is_nan());
+    }
+
+    #[test]
+    fn unbox_signed_value() {
+        assert_eq!(unbox_signed(r#box_signed(0)), Some(0));
+        assert_eq!(unbox_signed(r#box_signed(1)), Some(1));
+        assert_eq!(unbox_signed(r#box_signed(7)), Some(7));
+        assert_eq!(unbox_signed(r#box_signed(42)), Some(42));
+        assert_eq!(unbox_signed(r#box_signed(-1)), Some(-1));
+        assert_eq!(unbox_signed(r#box_signed(-7)), Some(-7));
+        assert_eq!(unbox_signed(r#box_signed(-42)), Some(-42));
     }
 
     #[test]
