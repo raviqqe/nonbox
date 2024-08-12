@@ -29,7 +29,7 @@ pub fn r#box_signed(value: i64) -> f64 {
 
 /// Unboxes a signed value from `f64`.
 pub fn unbox_signed(number: f64) -> Option<i64> {
-    unbox(number).map(|value| (if number < 0.0 { -1 } else { 1 }) * (value as i64))
+    unbox(number).map(|value| (if number.is_sign_negative() { -1 } else { 1 }) * (value as i64))
 }
 
 /// Boxes a value into `u64` representation of `f64`.
