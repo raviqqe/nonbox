@@ -11,7 +11,7 @@ pub const EXPONENT_MASK_OFFSET: usize = 48;
 pub const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
 
 /// A value mask.
-pub const BOXED_VALUE_MASK: u64 = (0x8000 << EXPONENT_MASK_OFFSET) | EXPONENT_MASK;
+pub const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 
 /// Boxes a value.
 ///
@@ -23,7 +23,7 @@ pub fn r#box(value: u64) -> f64 {
 pub fn unbox(number: f64) -> Option<u64> {
     number
         .is_nan()
-        .then_some(number.to_bits() & !BOXED_VALUE_MASK)
+        .then_some(number.to_bits() & BOXED_VALUE_MASK)
 }
 
 #[cfg(test)]
