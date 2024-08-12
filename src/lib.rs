@@ -15,7 +15,7 @@ pub fn r#box(value: u64) -> f64 {
     f64::from_bits(EXPONENT_MASK | value)
 }
 
-/// Unboxes a value.
+/// Unboxes a value from `f64`.
 pub fn unbox(number: f64) -> Option<u64> {
     number
         .is_nan()
