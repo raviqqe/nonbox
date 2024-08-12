@@ -8,7 +8,7 @@ const EXPONENT_MASK_OFFSET: usize = 48;
 const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
 const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 
-/// Boxes a value.
+/// Boxes a value into `f64`.
 ///
 /// The `value` needs to be less than `1 << 51`. Otherwise, it is truncated.
 pub fn r#box(value: u64) -> f64 {
@@ -17,6 +17,18 @@ pub fn r#box(value: u64) -> f64 {
 
 /// Unboxes a value.
 pub fn unbox(number: f64) -> Option<u64> {
+    number
+        .is_nan()
+        .then_some(number.to_bits() & BOXED_VALUE_MASK)
+}
+
+/// Boxes a value into `u64` representation of `f64`.
+pub fn box_u64(value: u64) -> f64 {
+    f64::from_bits(EXPONENT_MASK | value)
+}
+
+/// Unboxes a value from `u64` representation of `f64`.
+pub fn unbox_u64(number: f64) -> Option<u64> {
     number
         .is_nan()
         .then_some(number.to_bits() & BOXED_VALUE_MASK)
