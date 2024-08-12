@@ -5,6 +5,7 @@
 extern crate std;
 
 const EXPONENT_MASK_OFFSET: usize = 48;
+const SIGN_MASK: u64 = 1 << 63;
 const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
 const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 
@@ -24,12 +25,18 @@ pub fn unbox(number: f64) -> Option<u64> {
 
 /// Boxes a signed value into `f64`.
 pub fn r#box_signed(value: i64) -> f64 {
-    (if value < 0 { -1.0 } else { 1.0 }) * r#box(value.abs() as u64)
+    f64::from_bits((if value < 0 { SIGN_MASK } else { 0 }) | box_u64(value.abs() as u64))
 }
 
 /// Unboxes a signed value from `f64`.
 pub fn unbox_signed(number: f64) -> Option<i64> {
-    unbox(number).map(|value| (if number.is_sign_negative() { -1 } else { 1 }) * (value as i64))
+    unbox(number).map(|value| {
+        (if number.to_bits() & SIGN_MASK == 0 {
+            1
+        } else {
+            -1
+        }) * (value as i64)
+    })
 }
 
 /// Boxes a value into `u64` representation of `f64`.
@@ -80,6 +87,7 @@ mod tests {
 
     #[test]
     fn unbox_signed_value() {
+        std::println!("{:b}", (f64::NAN).to_bits());
         assert_eq!(unbox_signed(r#box_signed(0)), Some(0));
         assert_eq!(unbox_signed(r#box_signed(1)), Some(1));
         assert_eq!(unbox_signed(r#box_signed(7)), Some(7));
