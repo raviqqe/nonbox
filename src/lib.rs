@@ -33,6 +33,9 @@ mod tests {
 
     #[test]
     fn box_value() {
+        assert!(r#box(0).is_nan());
+        assert!(r#box(1).is_nan());
+        assert!(r#box(7).is_nan());
         assert!(r#box(42).is_nan());
     }
 
