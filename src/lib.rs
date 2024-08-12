@@ -8,7 +8,7 @@ extern crate std;
 pub const EXPONENT_MASK_OFFSET: usize = 48;
 
 /// An exponent mask.
-pub const EXPONENT_MASK: u64 = 0x7ff0 << EXPONENT_MASK_OFFSET;
+pub const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
 
 /// A value mask.
 pub const BOXED_VALUE_MASK: u64 = (0x8000 << EXPONENT_MASK_OFFSET) | EXPONENT_MASK;
@@ -29,6 +29,11 @@ pub fn unbox(number: f64) -> Option<u64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn check_mask() {
+        assert_eq!(EXPONENT_MASK, f64::NAN.to_bits());
+    }
 
     #[test]
     fn box_value() {
