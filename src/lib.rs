@@ -42,4 +42,12 @@ mod tests {
         assert_eq!(unbox(r#box(7)), Some(7));
         assert_eq!(unbox(r#box(42)), Some(42));
     }
+
+    #[test]
+    fn unbox_f64_value() {
+        assert_eq!(unbox(0.0), None);
+        assert_eq!(unbox(-1.0), None);
+        assert_eq!(unbox(1.0), None);
+        assert_eq!(unbox(42.0), None);
+    }
 }
