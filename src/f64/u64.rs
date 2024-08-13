@@ -11,3 +11,17 @@ pub fn box_unsigned(value: u64) -> u64 {
 pub fn unbox_unsigned(number: u64) -> Option<u64> {
     super::unbox_unsigned(f64::from_bits(number))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unbox_value_in_u64() {
+        assert_eq!(u64::unbox_unsigned(42.0f64.to_bits()), None);
+        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(0)), Some(0));
+        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(1)), Some(1));
+        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(7)), Some(7));
+        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(42)), Some(42));
+    }
+}

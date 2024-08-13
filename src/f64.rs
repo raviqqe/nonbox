@@ -1,5 +1,7 @@
 //! NaN boxing for `f64`.
 
+pub mod u64;
+
 const EXPONENT_MASK_OFFSET: usize = 48;
 const SIGN_MASK: u64 = 1 << 63;
 const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
@@ -89,14 +91,5 @@ mod tests {
         assert_eq!(unbox_unsigned(-1.0), None);
         assert_eq!(unbox_unsigned(1.0), None);
         assert_eq!(unbox_unsigned(42.0), None);
-    }
-
-    #[test]
-    fn unbox_value_in_u64() {
-        assert_eq!(u64::unbox_unsigned(42.0f64.to_bits()), None);
-        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(0)), Some(0));
-        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(1)), Some(1));
-        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(7)), Some(7));
-        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(42)), Some(42));
     }
 }
