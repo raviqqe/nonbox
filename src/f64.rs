@@ -19,7 +19,9 @@ pub fn unbox_unsigned(number: f64) -> Option<u64> {
 
 /// Boxes a 52-bit signed integer.
 pub fn box_signed(value: i64) -> f64 {
-    f64::from_bits((if value < 0 { SIGN_MASK } else { 0 }) | box_u64(value.unsigned_abs()))
+    f64::from_bits(
+        (if value < 0 { SIGN_MASK } else { 0 }) | u64::box_unsigned(value.unsigned_abs()),
+    )
 }
 
 /// Unboxes a 52-bit signed integer.
@@ -33,14 +35,18 @@ pub fn unbox_signed(number: f64) -> Option<i64> {
     })
 }
 
-/// Boxes a value into `u64` representation.
-pub fn box_u64(value: u64) -> u64 {
-    box_unsigned(value).to_bits()
-}
+pub mod u64 {
+    use super::*;
 
-/// Unboxes a value from `u64` representation.
-pub fn unbox_u64(number: u64) -> Option<u64> {
-    unbox_unsigned(f64::from_bits(number))
+    /// Boxes a 51-bit unsigned integer.
+    pub fn box_unsigned(value: u64) -> u64 {
+        super::box_unsigned(value).to_bits()
+    }
+
+    /// Unboxes a 51-bit unsigned integer.
+    pub fn unbox_unsigned(number: u64) -> Option<u64> {
+        super::unbox_unsigned(f64::from_bits(number))
+    }
 }
 
 #[cfg(test)]
