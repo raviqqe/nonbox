@@ -5,14 +5,12 @@ const SIGN_MASK: u64 = 1 << 63;
 const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
 const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 
-/// Boxes an unsigned value into `f64`.
-///
-/// The `value` needs to be less than `1 << 51`. Otherwise, it is truncated.
+/// Boxes a 51-bit unsigned integer into `f64`.
 pub fn box_unsigned(value: u64) -> f64 {
     f64::from_bits(EXPONENT_MASK | value)
 }
 
-/// Unboxes an unsigned value from `f64`.
+/// Unboxes a 51-bit unsigned integer from `f64`.
 pub fn unbox_unsigned(number: f64) -> Option<u64> {
     number
         .is_nan()
