@@ -12,6 +12,16 @@ pub fn unbox_unsigned(number: u64) -> Option<u64> {
     super::unbox_unsigned(f64::from_bits(number))
 }
 
+/// Boxes a 52-bit signed integer.
+pub fn box_signed(value: i64) -> u64 {
+    super::box_signed(value).to_bits()
+}
+
+/// Unboxes a 52-bit signed integer.
+pub fn unbox_signed(number: u64) -> Option<i64> {
+    super::unbox_signed(f64::from_bits(number))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
