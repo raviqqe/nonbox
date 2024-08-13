@@ -17,12 +17,12 @@ pub fn unbox_unsigned(number: f64) -> Option<u64> {
         .then_some(number.to_bits() & BOXED_VALUE_MASK)
 }
 
-/// Boxes a signed value into `f64`.
+/// Boxes a 52-bit signed integer into `f64`.
 pub fn box_signed(value: i64) -> f64 {
     f64::from_bits((if value < 0 { SIGN_MASK } else { 0 }) | box_u64(value.unsigned_abs()))
 }
 
-/// Unboxes a signed value from `f64`.
+/// Unboxes a 52-bit signed integer from `f64`.
 pub fn unbox_signed(number: f64) -> Option<i64> {
     unbox_unsigned(number).map(|value| {
         (if number.to_bits() & SIGN_MASK == 0 {
