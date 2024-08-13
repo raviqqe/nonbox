@@ -107,10 +107,10 @@ mod tests {
 
     #[test]
     fn unbox_value_in_u64() {
-        assert_eq!(unbox_u64(42.0f64.to_bits()), None);
-        assert_eq!(unbox_u64(r#box_u64(0)), Some(0));
-        assert_eq!(unbox_u64(r#box_u64(1)), Some(1));
-        assert_eq!(unbox_u64(r#box_u64(7)), Some(7));
-        assert_eq!(unbox_u64(r#box_u64(42)), Some(42));
+        assert_eq!(u64::unbox_unsigned(42.0f64.to_bits()), None);
+        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(0)), Some(0));
+        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(1)), Some(1));
+        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(7)), Some(7));
+        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(42)), Some(42));
     }
 }
