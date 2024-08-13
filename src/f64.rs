@@ -5,24 +5,24 @@ const SIGN_MASK: u64 = 1 << 63;
 const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
 const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 
-/// Boxes a 51-bit unsigned integer into `f64`.
+/// Boxes a 51-bit unsigned integer.
 pub fn box_unsigned(value: u64) -> f64 {
     f64::from_bits(EXPONENT_MASK | value)
 }
 
-/// Unboxes a 51-bit unsigned integer from `f64`.
+/// Unboxes a 51-bit unsigned integer.
 pub fn unbox_unsigned(number: f64) -> Option<u64> {
     number
         .is_nan()
         .then_some(number.to_bits() & BOXED_VALUE_MASK)
 }
 
-/// Boxes a 52-bit signed integer into `f64`.
+/// Boxes a 52-bit signed integer.
 pub fn box_signed(value: i64) -> f64 {
     f64::from_bits((if value < 0 { SIGN_MASK } else { 0 }) | box_u64(value.unsigned_abs()))
 }
 
-/// Unboxes a 52-bit signed integer from `f64`.
+/// Unboxes a 52-bit signed integer.
 pub fn unbox_signed(number: f64) -> Option<i64> {
     unbox_unsigned(number).map(|value| {
         (if number.to_bits() & SIGN_MASK == 0 {
@@ -33,12 +33,12 @@ pub fn unbox_signed(number: f64) -> Option<i64> {
     })
 }
 
-/// Boxes a value into `u64` representation of `f64`.
+/// Boxes a value into `u64` representation.
 pub fn box_u64(value: u64) -> u64 {
     box_unsigned(value).to_bits()
 }
 
-/// Unboxes a value from `u64` representation of `f64`.
+/// Unboxes a value from `u64` representation.
 pub fn unbox_u64(number: u64) -> Option<u64> {
     unbox_unsigned(f64::from_bits(number))
 }
