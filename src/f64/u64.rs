@@ -1,7 +1,5 @@
 //! NaN boxing with `u64` representation of `f64`.
 
-use super::*;
-
 /// Boxes a 51-bit unsigned integer.
 pub fn box_unsigned(value: u64) -> u64 {
     super::box_unsigned(value).to_bits()
@@ -27,11 +25,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn unbox_value_in_u64() {
-        assert_eq!(u64::unbox_unsigned(42.0f64.to_bits()), None);
-        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(0)), Some(0));
-        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(1)), Some(1));
-        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(7)), Some(7));
-        assert_eq!(u64::unbox_unsigned(u64::box_unsigned(42)), Some(42));
+    fn unbox_unsigned_value() {
+        assert_eq!(unbox_unsigned(42.0f64.to_bits()), None);
+        assert_eq!(unbox_unsigned(box_unsigned(0)), Some(0));
+        assert_eq!(unbox_unsigned(box_unsigned(1)), Some(1));
+        assert_eq!(unbox_unsigned(box_unsigned(7)), Some(7));
+        assert_eq!(unbox_unsigned(box_unsigned(42)), Some(42));
+    }
+
+    #[test]
+    fn unbox_signed_value() {
+        assert_eq!(unbox_signed(42.0f64.to_bits()), None);
+        assert_eq!(unbox_signed(box_signed(0)), Some(0));
+        assert_eq!(unbox_signed(box_signed(1)), Some(1));
+        assert_eq!(unbox_signed(box_signed(7)), Some(7));
+        assert_eq!(unbox_signed(box_signed(42)), Some(42));
+        assert_eq!(unbox_signed(box_signed(-1)), Some(-1));
+        assert_eq!(unbox_signed(box_signed(-7)), Some(-7));
+        assert_eq!(unbox_signed(box_signed(-42)), Some(-42));
     }
 }
