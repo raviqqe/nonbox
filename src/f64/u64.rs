@@ -1,4 +1,4 @@
-//! NaN boxing with `u64` representation of `f64`.
+//! NaN boxing for `u64` representation of `f64`.
 
 /// Boxes a 51-bit unsigned integer.
 pub fn box_unsigned(value: u64) -> u64 {
