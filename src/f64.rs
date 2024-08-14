@@ -5,7 +5,7 @@ pub mod u64;
 const EXPONENT_MASK_OFFSET: usize = 48;
 const SIGN_MASK: u64 = 1 << 63;
 const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
-const BOXED_VALUE_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
+const PAYLOAD_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 
 /// Boxes a 51-bit unsigned integer.
 pub fn box_unsigned(value: u64) -> f64 {
@@ -14,9 +14,7 @@ pub fn box_unsigned(value: u64) -> f64 {
 
 /// Unboxes a 51-bit unsigned integer.
 pub fn unbox_unsigned(number: f64) -> Option<u64> {
-    number
-        .is_nan()
-        .then_some(number.to_bits() & BOXED_VALUE_MASK)
+    number.is_nan().then_some(number.to_bits() & PAYLOAD_MASK)
 }
 
 /// Boxes a 52-bit signed integer.
