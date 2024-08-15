@@ -10,7 +10,7 @@ const QUIET_MASK: u64 = 0x0008 << EXPONENT_MASK_OFFSET;
 
 /// Returns `true` if a number contains a boxed value, or otherwise `false`.
 pub fn is_boxed(number: f64) -> bool {
-    number.to_bits() & QUIET_MASK != 0
+    number.to_bits() & QUIET_MASK == 0
 }
 
 /// Boxes a 51-bit unsigned integer.
@@ -48,6 +48,7 @@ mod tests {
     macro_rules! assert_boxed {
         ($value:expr) => {
             let value = $value;
+            std::println!("{:b}", value.to_bits());
 
             assert!(is_boxed(value));
             assert!(value.is_nan());
@@ -57,6 +58,7 @@ mod tests {
     #[test]
     fn check_mask() {
         assert_eq!(EXPONENT_MASK, f64::NAN.to_bits());
+        assert_ne!(QUIET_MASK & f64::NAN.to_bits(), 0);
     }
 
     #[test]
