@@ -45,7 +45,7 @@ mod tests {
     }
 
     #[test]
-    fn check_nan_bits() {
+    fn check_calculated_nan_bits() {
         assert_eq!(f64::NAN.to_bits(), (0.0f64 / 0.0).to_bits());
     }
 
