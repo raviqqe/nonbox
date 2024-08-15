@@ -84,7 +84,6 @@ mod tests {
 
     #[test]
     fn unbox_signed_value() {
-        std::println!("{:b}", (f64::NAN).to_bits());
         assert_eq!(unbox_signed(r#box_signed(0)), Some(0));
         assert_eq!(unbox_signed(r#box_signed(1)), Some(1));
         assert_eq!(unbox_signed(r#box_signed(7)), Some(7));
