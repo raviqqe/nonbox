@@ -45,6 +45,11 @@ mod tests {
     }
 
     #[test]
+    fn check_nan_bits() {
+        assert_eq!(f64::NAN.to_bits(), (0.0f64 / 0.0).to_bits());
+    }
+
+    #[test]
     fn box_unsigned_value() {
         assert!(box_unsigned(0).is_nan());
         assert!(box_unsigned(1).is_nan());
