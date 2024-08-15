@@ -8,7 +8,7 @@ const EXPONENT_MASK: u64 = 0x7ff0 << EXPONENT_MASK_OFFSET;
 const PAYLOAD_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
 const QUIET_MASK: u64 = 0x0008 << EXPONENT_MASK_OFFSET;
 
-/// Returns `true` if a number contains a boxed value.
+/// Returns `true` if a number contains a boxed value, or otherwise `false`.
 pub fn is_boxed(number: f64) -> bool {
     number.to_bits() & QUIET_MASK != 0
 }
