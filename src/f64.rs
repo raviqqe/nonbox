@@ -45,6 +45,15 @@ pub fn unbox_signed(number: f64) -> Option<i64> {
 mod tests {
     use super::*;
 
+    macro_rules! assert_boxed {
+        ($value:expr) => {
+            let value = $value;
+
+            assert!(is_boxed(value));
+            assert!(value.is_nan());
+        };
+    }
+
     #[test]
     fn check_mask() {
         assert_eq!(EXPONENT_MASK, f64::NAN.to_bits());
@@ -57,10 +66,10 @@ mod tests {
 
     #[test]
     fn box_unsigned_value() {
-        assert!(box_unsigned(0).is_nan());
-        assert!(box_unsigned(1).is_nan());
-        assert!(box_unsigned(7).is_nan());
-        assert!(box_unsigned(42).is_nan());
+        assert_boxed!(box_unsigned(0));
+        assert_boxed!(box_unsigned(1));
+        assert_boxed!(box_unsigned(7));
+        assert_boxed!(box_unsigned(42));
     }
 
     #[test]
