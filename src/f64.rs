@@ -4,8 +4,14 @@ pub mod u64;
 
 const EXPONENT_MASK_OFFSET: usize = 48;
 const SIGN_MASK: u64 = 1 << 63;
-const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
+const EXPONENT_MASK: u64 = 0x7ff0 << EXPONENT_MASK_OFFSET;
 const PAYLOAD_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
+const QUIET_MASK: u64 = 0x0008 << EXPONENT_MASK_OFFSET;
+
+/// Returns `true` if a number contains a boxed value.
+pub fn is_boxed(number: f64) -> bool {
+    number.to_bits() & QUIET_MASK != 0
+}
 
 /// Boxes a 51-bit unsigned integer.
 pub fn box_unsigned(value: u64) -> f64 {
