@@ -82,13 +82,13 @@ mod tests {
 
     #[test]
     fn box_signed_value() {
-        assert!(r#box_signed(0).is_nan());
-        assert!(r#box_signed(1).is_nan());
-        assert!(r#box_signed(7).is_nan());
-        assert!(r#box_signed(42).is_nan());
-        assert!(r#box_signed(-1).is_nan());
-        assert!(r#box_signed(-7).is_nan());
-        assert!(r#box_signed(-42).is_nan());
+        assert_boxed!(r#box_signed(0));
+        assert_boxed!(r#box_signed(1));
+        assert_boxed!(r#box_signed(7));
+        assert_boxed!(r#box_signed(42));
+        assert_boxed!(r#box_signed(-1));
+        assert_boxed!(r#box_signed(-7));
+        assert_boxed!(r#box_signed(-42));
     }
 
     #[test]
