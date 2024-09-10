@@ -39,6 +39,8 @@ pub fn unbox_signed(number: f64) -> Option<i64> {
 mod tests {
     use super::*;
 
+    const MAXIMUM: i64 = 1 << 50;
+
     #[test]
     fn check_mask() {
         assert_ne!(EXPONENT_MASK, f64::NAN.to_bits());
@@ -70,7 +72,7 @@ mod tests {
 
     #[test]
     fn unsigned_maximum() {
-        let x = 1 << 50;
+        let x = MAXIMUM as _;
 
         assert_eq!(unbox_unsigned(box_unsigned(x - 1)), Some(x - 1));
         assert_eq!(unbox_unsigned(box_unsigned(x)), Some(0));
@@ -100,18 +102,14 @@ mod tests {
 
     #[test]
     fn signed_maximum() {
-        let x = 1 << 50;
-
-        assert_eq!(unbox_unsigned(box_unsigned(x - 1)), Some(x - 1));
-        assert_eq!(unbox_unsigned(box_unsigned(x)), Some(0));
+        assert_eq!(unbox_signed(box_signed(MAXIMUM - 1)), Some(MAXIMUM - 1));
+        assert_eq!(unbox_signed(box_signed(MAXIMUM)), Some(0));
     }
 
     #[test]
     fn signed_minimum() {
-        let x = 1 << 50;
-
-        assert_eq!(unbox_signed(box_signed(1 - x)), Some(1 - x));
-        assert_eq!(unbox_signed(box_signed(-x)), Some(0));
+        assert_eq!(unbox_signed(box_signed(1 - MAXIMUM)), Some(1 - MAXIMUM));
+        assert_eq!(unbox_signed(box_signed(-MAXIMUM)), Some(0));
     }
 
     #[test]
