@@ -4,27 +4,27 @@ pub mod u64;
 
 const EXPONENT_MASK_OFFSET: usize = 48;
 const SIGN_MASK: u64 = 1 << 63;
-const EXPONENT_MASK: u64 = 0x7ff8 << EXPONENT_MASK_OFFSET;
-const PAYLOAD_MASK: u64 = !(0xfff8 << EXPONENT_MASK_OFFSET);
+const EXPONENT_MASK: u64 = 0x7ffc << EXPONENT_MASK_OFFSET;
+const PAYLOAD_MASK: u64 = !(0xfffc << EXPONENT_MASK_OFFSET);
 
-/// Boxes a 51-bit unsigned integer.
+/// Boxes a 50-bit unsigned integer.
 pub fn box_unsigned(value: u64) -> f64 {
     f64::from_bits(EXPONENT_MASK | value)
 }
 
-/// Unboxes a 51-bit unsigned integer.
+/// Unboxes a 50-bit unsigned integer.
 pub fn unbox_unsigned(number: f64) -> Option<u64> {
-    number.is_nan().then_some(number.to_bits() & PAYLOAD_MASK)
+    (number.to_bits() & EXPONENT_MASK == EXPONENT_MASK).then_some(number.to_bits() & PAYLOAD_MASK)
 }
 
-/// Boxes a 52-bit signed integer.
+/// Boxes a 51-bit signed integer.
 pub fn box_signed(value: i64) -> f64 {
     f64::from_bits(
         (if value < 0 { SIGN_MASK } else { 0 }) | u64::box_unsigned(value.unsigned_abs()),
     )
 }
 
-/// Unboxes a 52-bit signed integer.
+/// Unboxes a 51-bit signed integer.
 pub fn unbox_signed(number: f64) -> Option<i64> {
     unbox_unsigned(number).map(|value| {
         (if number.to_bits() & SIGN_MASK == 0 {
@@ -41,7 +41,8 @@ mod tests {
 
     #[test]
     fn check_mask() {
-        assert_eq!(EXPONENT_MASK, f64::NAN.to_bits());
+        assert_ne!(EXPONENT_MASK, f64::NAN.to_bits());
+        assert!(f64::from_bits(EXPONENT_MASK).is_nan());
     }
 
     #[test]
