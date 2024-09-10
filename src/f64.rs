@@ -45,6 +45,13 @@ mod tests {
     }
 
     #[test]
+    fn unbox_nan() {
+        assert_eq!(unbox_signed(f64::NAN), None);
+        assert_eq!(unbox_signed(f64::INFINITY), None);
+        assert_eq!(unbox_signed(f64::NEG_INFINITY), None);
+    }
+
+    #[test]
     fn box_unsigned_value() {
         assert!(box_unsigned(0).is_nan());
         assert!(box_unsigned(1).is_nan());
@@ -62,24 +69,24 @@ mod tests {
 
     #[test]
     fn box_signed_value() {
-        assert!(r#box_signed(0).is_nan());
-        assert!(r#box_signed(1).is_nan());
-        assert!(r#box_signed(7).is_nan());
-        assert!(r#box_signed(42).is_nan());
-        assert!(r#box_signed(-1).is_nan());
-        assert!(r#box_signed(-7).is_nan());
-        assert!(r#box_signed(-42).is_nan());
+        assert!(box_signed(0).is_nan());
+        assert!(box_signed(1).is_nan());
+        assert!(box_signed(7).is_nan());
+        assert!(box_signed(42).is_nan());
+        assert!(box_signed(-1).is_nan());
+        assert!(box_signed(-7).is_nan());
+        assert!(box_signed(-42).is_nan());
     }
 
     #[test]
     fn unbox_signed_value() {
-        assert_eq!(unbox_signed(r#box_signed(0)), Some(0));
-        assert_eq!(unbox_signed(r#box_signed(1)), Some(1));
-        assert_eq!(unbox_signed(r#box_signed(7)), Some(7));
-        assert_eq!(unbox_signed(r#box_signed(42)), Some(42));
-        assert_eq!(unbox_signed(r#box_signed(-1)), Some(-1));
-        assert_eq!(unbox_signed(r#box_signed(-7)), Some(-7));
-        assert_eq!(unbox_signed(r#box_signed(-42)), Some(-42));
+        assert_eq!(unbox_signed(box_signed(0)), Some(0));
+        assert_eq!(unbox_signed(box_signed(1)), Some(1));
+        assert_eq!(unbox_signed(box_signed(7)), Some(7));
+        assert_eq!(unbox_signed(box_signed(42)), Some(42));
+        assert_eq!(unbox_signed(box_signed(-1)), Some(-1));
+        assert_eq!(unbox_signed(box_signed(-7)), Some(-7));
+        assert_eq!(unbox_signed(box_signed(-42)), Some(-42));
     }
 
     #[test]
