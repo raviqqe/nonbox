@@ -70,11 +70,10 @@ mod tests {
 
     #[test]
     fn unsigned_maximum() {
-        assert_eq!(
-            unbox_unsigned(box_unsigned((1 << 50) - 1)),
-            Some((1 << 50) - 1)
-        );
-        assert_eq!(unbox_unsigned(box_unsigned(1 << 50)), Some(0));
+        let x = 1 << 50;
+
+        assert_eq!(unbox_unsigned(box_unsigned(x - 1)), Some(x - 1));
+        assert_eq!(unbox_unsigned(box_unsigned(x)), Some(0));
     }
 
     #[test]
@@ -101,20 +100,18 @@ mod tests {
 
     #[test]
     fn signed_maximum() {
-        assert_eq!(
-            unbox_unsigned(box_unsigned((1 << 50) - 1)),
-            Some((1 << 50) - 1)
-        );
-        assert_eq!(unbox_unsigned(box_unsigned(1 << 50)), Some(0));
+        let x = 1 << 50;
+
+        assert_eq!(unbox_unsigned(box_unsigned(x - 1)), Some(x - 1));
+        assert_eq!(unbox_unsigned(box_unsigned(x)), Some(0));
     }
 
     #[test]
     fn signed_minimum() {
-        assert_eq!(
-            unbox_signed(box_signed(-((1 << 50) - 1))),
-            Some(-((1 << 50) - 1))
-        );
-        assert_eq!(unbox_signed(box_signed(-(1 << 50))), Some(0));
+        let x = 1 << 50;
+
+        assert_eq!(unbox_signed(box_signed(1 - x)), Some(1 - x));
+        assert_eq!(unbox_signed(box_signed(-x)), Some(0));
     }
 
     #[test]
