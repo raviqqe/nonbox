@@ -93,8 +93,11 @@ mod tests {
         assert_eq!(unbox_signed(box_signed(-1)), Some(-1));
         assert_eq!(unbox_signed(box_signed(-7)), Some(-7));
         assert_eq!(unbox_signed(box_signed(-42)), Some(-42));
-        assert_eq!(unbox_signed(box_signed((1 << 50) - 1)), Some((1 << 50) - 1));
-        assert_eq!(unbox_signed(box_signed(1 << 50)), Some(0));
+        assert_eq!(
+            unbox_signed(box_signed(-((1 << 50) - 1))),
+            Some(-((1 << 50) - 1))
+        );
+        assert_eq!(unbox_signed(box_signed(-(1 << 50))), Some(0));
     }
 
     #[test]
