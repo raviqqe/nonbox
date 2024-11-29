@@ -36,7 +36,7 @@ pub const fn unbox_signed(number: f64) -> Option<i64> {
                 1
             } else {
                 -1
-            }) * (value as i64),
+            }) * value as i64,
         )
     } else {
         None
