@@ -8,31 +8,39 @@ const EXPONENT_MASK: u64 = 0x7ffc << EXPONENT_MASK_OFFSET;
 const PAYLOAD_MASK: u64 = !(0xfffc << EXPONENT_MASK_OFFSET);
 
 /// Boxes a 50-bit unsigned integer.
-pub fn box_unsigned(value: u64) -> f64 {
+pub const fn box_unsigned(value: u64) -> f64 {
     f64::from_bits(EXPONENT_MASK | value)
 }
 
 /// Unboxes a 50-bit unsigned integer.
-pub fn unbox_unsigned(number: f64) -> Option<u64> {
-    (number.to_bits() & EXPONENT_MASK == EXPONENT_MASK).then_some(number.to_bits() & PAYLOAD_MASK)
+pub const fn unbox_unsigned(number: f64) -> Option<u64> {
+    if number.to_bits() & EXPONENT_MASK == EXPONENT_MASK {
+        Some(number.to_bits() & PAYLOAD_MASK)
+    } else {
+        None
+    }
 }
 
 /// Boxes a 51-bit signed integer.
-pub fn box_signed(value: i64) -> f64 {
+pub const fn box_signed(value: i64) -> f64 {
     f64::from_bits(
         (if value < 0 { SIGN_MASK } else { 0 }) | u64::box_unsigned(value.unsigned_abs()),
     )
 }
 
 /// Unboxes a 51-bit signed integer.
-pub fn unbox_signed(number: f64) -> Option<i64> {
-    unbox_unsigned(number).map(|value| {
-        (if number.to_bits() & SIGN_MASK == 0 {
-            1
-        } else {
-            -1
-        }) * (value as i64)
-    })
+pub const fn unbox_signed(number: f64) -> Option<i64> {
+    if let Some(value) = unbox_unsigned(number) {
+        Some(
+            (if number.to_bits() & SIGN_MASK == 0 {
+                1
+            } else {
+                -1
+            }) * value as i64,
+        )
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]
