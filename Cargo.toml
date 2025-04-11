@@ -27,3 +27,6 @@ unimplemented = "deny"
 uninlined_format_args = "deny"
 unused_self = "deny"
 use_self = "deny"
+
+[dev-dependencies]
+codspeed-criterion-compat = "2.10.1"
