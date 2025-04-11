@@ -3,7 +3,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use nonbox::f64;
 
-const ITERATION_COUNT: usize = 1000;
+const ITERATION_COUNT: usize = 10000;
 
 fn bench(criterion: &mut Criterion) {
     criterion.bench_function("sum", |bencher| {
