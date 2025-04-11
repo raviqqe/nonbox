@@ -1,108 +1,24 @@
 #![allow(missing_docs)]
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use stak::{
-    device::FixedBufferDevice,
-    file::VoidFileSystem,
-    include_module,
-    module::{Module, UniversalModule},
-    process_context::VoidProcessContext,
-    r7rs::{SmallError, SmallPrimitiveSet},
-    time::VoidClock,
-    vm::Vm,
-};
-use stak_compiler::compile_r7rs;
-use std::{fs::read, io::Sink, path::Path};
+use nonbox::f64;
 
-const HEAP_SIZE: usize = 1 << 18;
-const DEVICE_BUFFER_SIZE: usize = 1 << 8;
+const ITERATION_COUNT: usize = 1000;
 
-static ADD_MODULE: UniversalModule = include_module!("add/main.scm");
-static EMPTY_MODULE: UniversalModule = include_module!("empty/main.scm");
-static EVAL_MODULE: UniversalModule = include_module!("eval/main.scm");
-static FIBONACCI_MODULE: UniversalModule = include_module!("fibonacci/main.scm");
-static HELLO_MODULE: UniversalModule = include_module!("hello/main.scm");
-static SUM_MODULE: UniversalModule = include_module!("sum/main.scm");
-static TAK_MODULE: UniversalModule = include_module!("tak/main.scm");
+fn sum(criterion: &mut Criterion) {
+    criterion.bench_function(name, |bencher| {
+        bencher.iter(|| {
+            let mut sum = 0.0f64;
 
-fn initialize(module: &'static UniversalModule) -> Result<(), SmallError> {
-    let mut heap = [Default::default(); HEAP_SIZE];
-    let mut vm = Vm::new(
-        &mut heap,
-        SmallPrimitiveSet::new(
-            FixedBufferDevice::<DEVICE_BUFFER_SIZE, 0>::new(&[]),
-            VoidFileSystem::new(),
-            VoidProcessContext::new(),
-            VoidClock::new(),
-        ),
-    )?;
+            for index in 0..black_box(ITERATION_COUNT as u64) {
+                sum = sum + f64::box_unsigned(index);
+            }
 
-    vm.initialize(module.bytecode().iter().copied())?;
-
-    Ok(())
+            black_box(sum);
+        })
+    });
 }
 
-fn run(module: &'static UniversalModule) -> Result<(), SmallError> {
-    let mut heap = [Default::default(); HEAP_SIZE];
-    let mut vm = Vm::new(
-        &mut heap,
-        SmallPrimitiveSet::new(
-            FixedBufferDevice::<DEVICE_BUFFER_SIZE, 0>::new(&[]),
-            VoidFileSystem::new(),
-            VoidProcessContext::new(),
-            VoidClock::new(),
-        ),
-    )?;
-
-    vm.initialize(module.bytecode().iter().copied())?;
-    vm.run()
-}
-
-static BENCHMARKS: &[(&str, &str, &UniversalModule)] = &[
-    ("add", "add", &ADD_MODULE),
-    ("empty", "empty", &EMPTY_MODULE),
-    ("eval", "eval_sum_10000000", &EVAL_MODULE),
-    ("fibonacci", "fibonacci_32", &FIBONACCI_MODULE),
-    ("hello", "hello", &HELLO_MODULE),
-    ("sum", "sum_10000000", &SUM_MODULE),
-    ("tak", "tak_16_8_0", &TAK_MODULE),
-];
-
-fn stak_run(criterion: &mut Criterion) {
-    for (_, name, module) in BENCHMARKS {
-        criterion.bench_function(name, |bencher| {
-            bencher.iter(|| {
-                run(black_box(module)).unwrap();
-            })
-        });
-    }
-}
-
-fn stak_initialize(criterion: &mut Criterion) {
-    for (name, _, module) in BENCHMARKS {
-        criterion.bench_function(&format!("init_{name}"), |bencher| {
-            bencher.iter(|| {
-                initialize(black_box(module)).unwrap();
-            })
-        });
-    }
-}
-
-fn stak_compile(criterion: &mut Criterion) {
-    for (name, _, _) in BENCHMARKS {
-        let source = read(Path::new("src").join(name).join("main.scm")).unwrap();
-        let source = source.as_slice();
-
-        criterion.bench_function(&format!("compile_{name}"), |bencher| {
-            bencher.iter(|| compile_r7rs(black_box(source), Sink::default()).unwrap())
-        });
-    }
-}
-
-criterion_group! {
-    name = benches;
-    config = Criterion::default().sample_size(10);
-    targets = stak_run, stak_initialize, stak_compile
-}
+criterion_group!(benches, stak_run);
 
 criterion_main!(benches);
