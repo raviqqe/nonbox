@@ -5,8 +5,8 @@ use nonbox::f64;
 
 const ITERATION_COUNT: usize = 1000;
 
-fn sum(criterion: &mut Criterion) {
-    criterion.bench_function(name, |bencher| {
+fn bench(criterion: &mut Criterion) {
+    criterion.bench_function("sum", |bencher| {
         bencher.iter(|| {
             let mut sum = 0.0f64;
 
@@ -19,6 +19,6 @@ fn sum(criterion: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, stak_run);
+criterion_group!(benches, bench);
 
 criterion_main!(benches);
