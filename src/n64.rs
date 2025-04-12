@@ -3,6 +3,7 @@
 use crate::f64::{box_signed, box_unsigned, is_boxed, unbox_signed, unbox_unsigned};
 use core::ops::Add;
 
+// TODO Make this `PAYLOAD_FLAG`.
 const INTEGER_FLAG: u64 = 0x0002 << 48;
 
 /// A 64-bit "number" representation that embraces 49-bit payloads, 49-bit
@@ -73,12 +74,13 @@ impl Add for N64 {
     type Output = Self;
 
     fn add(self, other: Self) -> Self::Output {
-        if self.is_boxed() && other.is_boxed() {
-            Self::from_signed_integer(
+        match (self.to_f64(), other.to_f64()) {
+            (Some(x), Some(y)) => Self((x + y).to_bits()),
+            (Some(x), None) => Self((x + other.to_signed_integer_unchecked() as f64).to_bits()),
+            (None, Some(y)) => Self((self.to_signed_integer_unchecked() as f64 + y).to_bits()),
+            (None, None) => Self::from_signed_integer(
                 self.to_signed_integer_unchecked() + other.to_signed_integer_unchecked(),
-            )
-        } else {
-            Self((f64::from_bits(self.0) + f64::from_bits(other.0)).to_bits())
+            ),
         }
     }
 }
@@ -118,6 +120,14 @@ mod tests {
         assert_eq!(
             N64::from_signed_integer(2) + N64::from_signed_integer(3),
             N64::from_signed_integer(5)
+        );
+        assert_eq!(
+            N64::from_signed_integer(2) + N64::from_f64(3.0),
+            N64::from_f64(5.0)
+        );
+        assert_eq!(
+            N64::from_f64(2.0) + N64::from_signed_integer(3),
+            N64::from_f64(5.0)
         );
     }
 }
