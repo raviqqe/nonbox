@@ -111,4 +111,13 @@ mod tests {
         assert_eq!(N64::from_signed_integer(42).to_payload(), None);
         assert_eq!(N64::from_signed_integer(-42).to_payload(), None);
     }
+
+    #[test]
+    fn add() {
+        assert_eq!(N64::from_f64(2.0) + N64::from_f64(3.0), N64::from_f64(5.0));
+        assert_eq!(
+            N64::from_signed_integer(2) + N64::from_signed_integer(3),
+            N64::from_signed_integer(5)
+        );
+    }
 }
