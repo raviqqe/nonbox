@@ -75,12 +75,12 @@ impl Add for N64 {
 
     fn add(self, other: Self) -> Self::Output {
         match (self.to_f64(), other.to_f64()) {
-            (Some(x), Some(y)) => Self((x + y).to_bits()),
-            (Some(x), None) => Self((x + other.to_signed_integer_unchecked() as f64).to_bits()),
-            (None, Some(y)) => Self((self.to_signed_integer_unchecked() as f64 + y).to_bits()),
             (None, None) => Self::from_signed_integer(
                 self.to_signed_integer_unchecked() + other.to_signed_integer_unchecked(),
             ),
+            (Some(x), Some(y)) => Self((x + y).to_bits()),
+            (Some(x), None) => Self((x + other.to_signed_integer_unchecked() as f64).to_bits()),
+            (None, Some(y)) => Self((self.to_signed_integer_unchecked() as f64 + y).to_bits()),
         }
     }
 }
