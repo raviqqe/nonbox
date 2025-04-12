@@ -40,6 +40,7 @@ mod tests {
 
     #[test]
     fn integer() {
+        assert!(is_boxed(box_integer(0)));
         assert_eq!(unbox_integer(box_integer(0)), Some(0));
         assert_eq!(unbox_integer(box_integer(1)), Some(1));
         assert_eq!(unbox_integer(box_integer(-1)), Some(-1));
@@ -49,6 +50,7 @@ mod tests {
 
     #[test]
     fn payload() {
+        assert!(is_boxed(box_payload(0)));
         assert_eq!(unbox_payload(box_payload(0)), Some(0));
         assert_eq!(unbox_payload(box_payload(1)), Some(1));
         assert_eq!(unbox_payload(box_payload(42)), Some(42));
