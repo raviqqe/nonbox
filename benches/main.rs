@@ -5,20 +5,6 @@ use nonbox::f64;
 
 const ITERATION_COUNT: usize = 10000;
 
-fn sum(criterion: &mut Criterion) {
-    criterion.bench_function("sum_pure", |bencher| {
-        bencher.iter(|| {
-            let mut sum = 0.0f64;
-
-            for index in 0..black_box(ITERATION_COUNT as u64) {
-                sum += index as f64;
-            }
-
-            black_box(sum);
-        })
-    });
-}
-
 fn box_unsigned(criterion: &mut Criterion) {
     criterion.bench_function("box_unsigned", |bencher| {
         bencher.iter(|| {
