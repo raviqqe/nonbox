@@ -68,6 +68,23 @@ pub const fn is_f62(number: u64) -> bool {
     number & 0b11 == 0b11
 }
 
+/// A 62-bit floating-point number.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[repr(transparent)]
+pub struct Float62(u64);
+
+impl Float62 {
+    /// Creates a 62-bit floating-point number from its binary representation.
+    pub fn new(number: u64) -> Self {
+        Self(number)
+    }
+
+    /// Creates a 62-bit floating-point number from its binary representation.
+    pub fn unbox(self) -> Option<f64> {
+        unbox_f62(self.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
