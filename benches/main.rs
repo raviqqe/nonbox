@@ -17,8 +17,10 @@ fn sum(criterion: &mut Criterion) {
             black_box(sum);
         })
     });
+}
 
-    criterion.bench_function("sum", |bencher| {
+fn box_unsigned(criterion: &mut Criterion) {
+    criterion.bench_function("box_unsigned", |bencher| {
         bencher.iter(|| {
             let mut sum = 0.0f64;
 
@@ -31,6 +33,20 @@ fn sum(criterion: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, sum);
+fn box_signed(criterion: &mut Criterion) {
+    criterion.bench_function("box_signed", |bencher| {
+        bencher.iter(|| {
+            let mut sum = 0.0f64;
+
+            for index in 0..black_box(ITERATION_COUNT as i64) {
+                sum += f64::from_bits(f64::box_signed(index));
+            }
+
+            black_box(sum);
+        })
+    });
+}
+
+criterion_group!(benches, sum, box_unsigned, box_signed);
 
 criterion_main!(benches);
