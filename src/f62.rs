@@ -8,11 +8,16 @@ pub const fn box_integer(integer: i64) -> u64 {
 
 /// Boxes a 63-bit unsigned integer.
 pub const fn unbox_integer(number: u64) -> Option<i64> {
-    if number & 1 == 0 {
+    if is_integer(number) {
         Some(number as i64 >> 1)
     } else {
         None
     }
+}
+
+/// Returns `true` if a number is an integer.
+pub const fn is_integer(number: u64) -> bool {
+    number & 1 == 0
 }
 
 /// Boxes a 62-bit payload.
@@ -22,16 +27,16 @@ pub const fn box_payload(payload: u64) -> u64 {
 
 /// Boxes a 62-bit payload.
 pub const fn unbox_payload(number: u64) -> Option<u64> {
-    if number & 0b11 == 1 {
+    if is_payload(number) {
         Some(number >> 2)
     } else {
         None
     }
 }
 
-/// Returns `true` if an integer or a payload is boxed in a given number.
-pub const fn is_boxed(number: u64) -> bool {
-    number & 0b11 < 0b11
+/// Returns `true` if a number is a payload.
+pub const fn is_payload(number: u64) -> bool {
+    number & 0b11 == 1
 }
 
 #[cfg(test)]
@@ -40,7 +45,7 @@ mod tests {
 
     #[test]
     fn integer() {
-        assert!(is_boxed(box_integer(0)));
+        assert!(is_integer(box_integer(0)));
         assert_eq!(unbox_integer(box_integer(0)), Some(0));
         assert_eq!(unbox_integer(box_integer(1)), Some(1));
         assert_eq!(unbox_integer(box_integer(-1)), Some(-1));
@@ -50,7 +55,7 @@ mod tests {
 
     #[test]
     fn payload() {
-        assert!(is_boxed(box_payload(0)));
+        assert!(is_integer(box_payload(0)));
         assert_eq!(unbox_payload(box_payload(0)), Some(0));
         assert_eq!(unbox_payload(box_payload(1)), Some(1));
         assert_eq!(unbox_payload(box_payload(42)), Some(42));
