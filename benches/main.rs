@@ -53,7 +53,7 @@ fn unbox_signed(criterion: &mut Criterion) {
     criterion.bench_function("unbox_signed", |bencher| {
         bencher.iter(|| {
             for index in 0..ITERATION_COUNT as u64 {
-                black_box(f64::unbox_signed(index));
+                black_box(f64::unbox_signed(black_box(index)));
             }
         })
     });
