@@ -1,4 +1,5 @@
-//! NaN boxing for 62-bit floating-pointer numbers encompassing 63-bit integers and 62-bit payloads.
+//! NaN boxing for 62-bit floating-pointer numbers encompassing 63-bit integers
+//! and 62-bit payloads.
 
 const EXPONENT_MASK_OFFSET: usize = 48;
 const SIGN_MASK: u64 = 1 << 63;
