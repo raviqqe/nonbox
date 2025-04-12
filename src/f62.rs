@@ -1,4 +1,4 @@
-//! NaN boxing for `f64`.
+//! NaN boxing for 62-bit floating-pointer numbers.
 
 const EXPONENT_MASK_OFFSET: usize = 48;
 const SIGN_MASK: u64 = 1 << 63;
