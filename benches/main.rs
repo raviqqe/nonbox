@@ -39,6 +39,33 @@ fn box_signed(criterion: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, sum, box_unsigned, box_signed);
+fn unbox_unsigned(criterion: &mut Criterion) {
+    criterion.bench_function("unbox_unsigned", |bencher| {
+        bencher.iter(|| {
+            for index in 0..ITERATION_COUNT as u64 {
+                black_box(f64::unbox_unsigned(index));
+            }
+        })
+    });
+}
+
+fn unbox_signed(criterion: &mut Criterion) {
+    criterion.bench_function("unbox_signed", |bencher| {
+        bencher.iter(|| {
+            for index in 0..ITERATION_COUNT as u64 {
+                black_box(f64::unbox_signed(index));
+            }
+        })
+    });
+}
+
+criterion_group!(
+    benches,
+    sum,
+    box_unsigned,
+    box_signed,
+    unbox_unsigned,
+    unbox_signed
+);
 
 criterion_main!(benches);
