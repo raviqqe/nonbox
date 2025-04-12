@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn payload() {
-        assert!(is_integer(box_payload(0)));
+        assert!(is_payload(box_payload(0)));
         assert_eq!(unbox_payload(box_payload(0)), Some(0));
         assert_eq!(unbox_payload(box_payload(1)), Some(1));
         assert_eq!(unbox_payload(box_payload(42)), Some(42));
