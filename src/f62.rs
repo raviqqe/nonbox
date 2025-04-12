@@ -53,9 +53,9 @@ pub const fn box_f62(number: f64) -> u64 {
 /// Boxes a 62-bit floating-point number.
 pub fn unbox_f62(number: u64) -> Option<f64> {
     if is_f62(number) {
-        let significant_bits = 2 - (number >> 63);
+        let exponent_tail = 2 - (number >> 63);
         Some(f64::from_bits(
-            (number & !0b11 | significant_bits).rotate_right(ROTATION_COUNT),
+            (number & !0b11 | exponent_tail).rotate_right(ROTATION_COUNT),
         ))
     } else {
         None
