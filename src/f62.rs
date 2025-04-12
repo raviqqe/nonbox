@@ -20,5 +20,7 @@ mod tests {
         assert_eq!(unbox_integer(box_integer(0)), 0);
         assert_eq!(unbox_integer(box_integer(1)), 1);
         assert_eq!(unbox_integer(box_integer(-1)), -1);
+        assert_eq!(unbox_integer(box_integer(42)), 42);
+        assert_eq!(unbox_integer(box_integer(-42)), -42);
     }
 }
