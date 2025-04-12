@@ -22,13 +22,9 @@ fn sum(criterion: &mut Criterion) {
 fn box_unsigned(criterion: &mut Criterion) {
     criterion.bench_function("box_unsigned", |bencher| {
         bencher.iter(|| {
-            let mut sum = 0.0f64;
-
             for index in 0..black_box(ITERATION_COUNT as u64) {
-                sum += f64::from_bits(f64::box_unsigned(index));
+                black_box(f64::box_unsigned(index));
             }
-
-            black_box(sum);
         })
     });
 }
@@ -36,13 +32,9 @@ fn box_unsigned(criterion: &mut Criterion) {
 fn box_signed(criterion: &mut Criterion) {
     criterion.bench_function("box_signed", |bencher| {
         bencher.iter(|| {
-            let mut sum = 0.0f64;
-
             for index in 0..black_box(ITERATION_COUNT as i64) {
-                sum += f64::from_bits(f64::box_signed(index));
+                black_box(f64::box_signed(index));
             }
-
-            black_box(sum);
         })
     });
 }
