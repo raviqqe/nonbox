@@ -86,18 +86,18 @@ fn f62(criterion: &mut Criterion) {
         })
     });
 
-    criterion.bench_function("f62_box_f62", |bencher| {
+    criterion.bench_function("f62_box_float", |bencher| {
         bencher.iter(|| {
             for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::box_f62(black_box(f64::from_bits(index))));
+                black_box(f62::box_float(black_box(f64::from_bits(index))));
             }
         })
     });
 
-    criterion.bench_function("f62_unbox_f62", |bencher| {
+    criterion.bench_function("f62_unbox_float", |bencher| {
         bencher.iter(|| {
             for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::unbox_f62(black_box(index)));
+                black_box(f62::unbox_float(black_box(index)));
             }
         })
     });

@@ -8,7 +8,7 @@ pub const fn box_integer(integer: i64) -> u64 {
     (integer << 1) as _
 }
 
-/// Boxes a 63-bit unsigned integer.
+/// Unboxes a 63-bit unsigned integer.
 pub const fn unbox_integer(number: u64) -> Option<i64> {
     if is_integer(number) {
         Some(number as i64 >> 1)
@@ -27,7 +27,7 @@ pub const fn box_payload(payload: u64) -> u64 {
     (payload << 2) | 1
 }
 
-/// Boxes a 62-bit payload.
+/// Unboxes a 62-bit payload.
 pub const fn unbox_payload(number: u64) -> Option<u64> {
     if is_payload(number) {
         Some(number >> 2)
@@ -41,8 +41,8 @@ pub const fn is_payload(number: u64) -> bool {
     number & 0b11 == 1
 }
 
-/// Boxes a 62-bit floating-point number.
-pub const fn box_f62(number: f64) -> u64 {
+/// Boxes a 64-bit floating-point number.
+pub const fn box_float(number: f64) -> u64 {
     if number == 0.0 {
         number.to_bits()
     } else {
@@ -50,8 +50,8 @@ pub const fn box_f62(number: f64) -> u64 {
     }
 }
 
-/// Boxes a 62-bit floating-point number.
-pub fn unbox_f62(number: u64) -> Option<f64> {
+/// Unboxes a 64-bit floating-point number.
+pub fn unbox_float(number: u64) -> Option<f64> {
     if is_f62(number) {
         let exponent_tail = 2 - (number >> 63);
 
@@ -79,9 +79,34 @@ impl Float62 {
         Self(number)
     }
 
-    /// Creates a 62-bit floating-point number from its binary representation.
-    pub fn unbox(self) -> Option<f64> {
-        unbox_f62(self.0)
+    /// Creates a 62-bit floating-point number from a payload.
+    pub fn from_payload(payload: u64) -> Self {
+        Self::new(box_payload(payload))
+    }
+
+    /// Creates a 62-bit floating-point number from an integer.
+    pub fn from_integer(integer: i64) -> Self {
+        Self::new(box_integer(integer))
+    }
+
+    /// Creates a 62-bit floating-point number from a 64-bit floating-point number.
+    pub fn from_float(number: f64) -> Self {
+        Self::new(box_float(number))
+    }
+
+    /// Returns a payload.
+    pub fn to_payload(self) -> Option<u64> {
+        unbox_payload(self.0)
+    }
+
+    /// Returns an integer.
+    pub fn to_integer(self) -> Option<i64> {
+        unbox_integer(self.0)
+    }
+
+    /// Returns a 64-bit floating-point number.
+    pub fn to_float(self) -> Option<f64> {
+        unbox_float(self.0)
     }
 }
 
@@ -109,11 +134,11 @@ mod tests {
 
     #[test]
     fn f62() {
-        assert!(is_f62(box_f62(1.0)));
-        assert_eq!(unbox_f62(box_f62(0.0)), None);
-        assert_eq!(unbox_f62(box_f62(1.0)), Some(1.0));
-        assert_eq!(unbox_f62(box_f62(-1.0)), Some(-1.0));
-        assert_eq!(unbox_f62(box_f62(42.0)), Some(42.0));
-        assert_eq!(unbox_f62(box_f62(-42.0)), Some(-42.0));
+        assert!(is_f62(box_float(1.0)));
+        assert_eq!(unbox_float(box_float(0.0)), None);
+        assert_eq!(unbox_float(box_float(1.0)), Some(1.0));
+        assert_eq!(unbox_float(box_float(-1.0)), Some(-1.0));
+        assert_eq!(unbox_float(box_float(42.0)), Some(42.0));
+        assert_eq!(unbox_float(box_float(-42.0)), Some(-42.0));
     }
 }
