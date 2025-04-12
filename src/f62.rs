@@ -17,7 +17,7 @@ pub const fn unbox_integer(number: u64) -> Option<i64> {
 
 /// Boxes a 62-bit payload.
 pub const fn box_payload(payload: u64) -> u64 {
-    (payload << 2) & 1
+    (payload << 2) | 1
 }
 
 /// Boxes a 62-bit payload.
@@ -27,6 +27,11 @@ pub const fn unbox_payload(number: u64) -> Option<u64> {
     } else {
         None
     }
+}
+
+/// Returns `true` if an integer or a payload is boxed in a given number.
+pub const fn is_boxed(number: u64) -> bool {
+    number & 0b11 < 0b11
 }
 
 #[cfg(test)]
@@ -43,11 +48,9 @@ mod tests {
     }
 
     #[test]
-    fn float() {
-        assert_eq!(unbox_integer(box_integer(0)), Some(0));
-        assert_eq!(unbox_integer(box_integer(1)), Some(1));
-        assert_eq!(unbox_integer(box_integer(-1)), Some(-1));
-        assert_eq!(unbox_integer(box_integer(42)), Some(42));
-        assert_eq!(unbox_integer(box_integer(-42)), Some(-42));
+    fn payload() {
+        assert_eq!(unbox_payload(box_payload(0)), Some(0));
+        assert_eq!(unbox_payload(box_payload(1)), Some(1));
+        assert_eq!(unbox_payload(box_payload(42)), Some(42));
     }
 }
