@@ -23,7 +23,7 @@ fn sum(criterion: &mut Criterion) {
             let mut sum = 0.0f64;
 
             for index in 0..black_box(ITERATION_COUNT as u64) {
-                sum += f64::box_unsigned(index);
+                sum += f64::from_bits(f64::box_unsigned(index));
             }
 
             black_box(sum);
