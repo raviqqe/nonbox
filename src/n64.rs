@@ -18,20 +18,24 @@ impl N64 {
 
     /// Returns a payload.
     pub const fn to_payload(self) -> Option<u64> {
-        unbox_unsigned(self.0)
+        if self.0 & INTEGER_FLAG == 0 {
+            unbox_unsigned(self.0)
+        } else {
+            None
+        }
     }
 
     /// Creates a number from an integer.
     pub const fn from_signed_integer(integer: i64) -> Self {
-        Self(box_signed(integer) & INTEGER_FLAG)
+        Self(box_signed(integer) | INTEGER_FLAG)
     }
 
     /// Returns a signed integer.
     pub const fn to_signed_integer(self) -> Option<i64> {
-        if self.0 & INTEGER_FLAG != 0 {
-            unbox_signed(self.0)
-        } else {
+        if self.0 & INTEGER_FLAG == 0 {
             None
+        } else {
+            unbox_signed(self.0 & !INTEGER_FLAG)
         }
     }
 
