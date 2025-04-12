@@ -1,6 +1,8 @@
 //! NaN boxing for 62-bit floating-pointer numbers encompassing 63-bit integers
 //! and 62-bit payloads.
 
+const ROTATION_COUNT: u32 = 3;
+
 /// Boxes a 63-bit unsigned integer.
 pub const fn box_integer(integer: i64) -> u64 {
     (integer << 1) as _
@@ -39,6 +41,32 @@ pub const fn is_payload(number: u64) -> bool {
     number & 0b11 == 1
 }
 
+/// Boxes a 62-bit floating-point number.
+pub const fn box_f62(number: f64) -> u64 {
+    if number == 0.0 {
+        number.to_bits()
+    } else {
+        number.to_bits().rotate_left(ROTATION_COUNT) | 0b11
+    }
+}
+
+/// Boxes a 62-bit floating-point number.
+pub fn unbox_f62(number: u64) -> Option<f64> {
+    if is_f62(number) {
+        let significant_bits = 2 - (number >> 63);
+        Some(f64::from_bits(
+            (number & !0b11 | significant_bits).rotate_right(ROTATION_COUNT),
+        ))
+    } else {
+        None
+    }
+}
+
+/// Returns `true` if a number is a 62-bit floating-point number.
+pub const fn is_f62(number: u64) -> bool {
+    number & 0b11 == 0b11
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -59,5 +87,15 @@ mod tests {
         assert_eq!(unbox_payload(box_payload(0)), Some(0));
         assert_eq!(unbox_payload(box_payload(1)), Some(1));
         assert_eq!(unbox_payload(box_payload(42)), Some(42));
+    }
+
+    #[test]
+    fn f62() {
+        assert!(is_f62(box_f62(1.0)));
+        assert_eq!(unbox_f62(box_f62(0.0)), None);
+        assert_eq!(unbox_f62(box_f62(1.0)), Some(1.0));
+        assert_eq!(unbox_f62(box_f62(-1.0)), Some(-1.0));
+        assert_eq!(unbox_f62(box_f62(42.0)), Some(42.0));
+        assert_eq!(unbox_f62(box_f62(-42.0)), Some(-42.0));
     }
 }
