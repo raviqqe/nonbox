@@ -12,7 +12,7 @@ pub const fn box_unsigned(payload: u64) -> u64 {
 
 /// Unboxes a 50-bit unsigned integer.
 pub const fn unbox_unsigned(number: u64) -> Option<u64> {
-    if number & EXPONENT_MASK == EXPONENT_MASK {
+    if is_boxed(number) {
         Some(number & PAYLOAD_MASK)
     } else {
         None
@@ -31,6 +31,11 @@ pub const fn unbox_signed(number: u64) -> Option<i64> {
     } else {
         None
     }
+}
+
+/// Returns `true` if a payload is boxed in a given number.
+pub const fn is_boxed(number: u64) -> bool {
+    number & EXPONENT_MASK == EXPONENT_MASK
 }
 
 #[cfg(test)]
