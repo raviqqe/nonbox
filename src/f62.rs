@@ -1,7 +1,7 @@
 //! NaN boxing for 62-bit floating-pointer numbers encompassing 63-bit integers
 //! and 62-bit payloads.
 
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 const ROTATION_COUNT: u32 = 3;
 
@@ -187,6 +187,17 @@ impl MulAssign for Float62 {
 impl DivAssign for Float62 {
     fn div_assign(&mut self, rhs: Self) {
         *self = *self / rhs;
+    }
+}
+
+impl Neg for Float62 {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        match self.to_number() {
+            Ok(x) => Self::from_integer(-x),
+            Err(x) => Self::from_float(-x),
+        }
     }
 }
 
