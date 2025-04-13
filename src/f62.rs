@@ -146,7 +146,7 @@ impl Float62 {
         let (Some(x), Some(y)) = (self.to_integer(), self.to_integer()) else {
             // Slow path
             return match (self.to_number(), rhs.to_number()) {
-                (Ok(x), Ok(y)) => Self::from_integer(operate_integer(x, y)),
+                (Ok(_), Ok(_)) => unreachable!(),
                 (Ok(x), Err(y)) => Self::from_float(operate_float(x as f64, y)),
                 (Err(x), Ok(y)) => Self::from_float(operate_float(x, y as f64)),
                 (Err(x), Err(y)) => Self::from_float(operate_float(x, y)),
