@@ -152,14 +152,8 @@ macro_rules! operate {
             }
         }
 
-        let (Some(x), Some(y)) = (self.to_integer(), self.to_integer()) else {
-            // Slow path
-            return match (self.to_number(), rhs.to_number()) {
-                (Ok(_), Ok(_)) => unreachable!(),
-                (Ok(x), Err(y)) => Self::from_float(operate_float(x as f64, y)),
-                (Err(x), Ok(y)) => Self::from_float(operate_float(x, y as f64)),
-                (Err(x), Err(y)) => Self::from_float(operate_float(x, y)),
-            };
+        let (Some(x), Some(y)) = (self.to_integer(), rhs.to_integer()) else {
+            return calculate_float(self, rhs);
         };
 
         Self::from_integer(operate_integer(x, y))
