@@ -16,7 +16,7 @@ fn sum(criterion: &mut Criterion) {
             let mut sum = 0;
 
             for x in &xs {
-                sum += *x;
+                sum += black_box(*x);
             }
 
             black_box(sum);
@@ -32,7 +32,7 @@ fn sum(criterion: &mut Criterion) {
             let mut sum = 0.0;
 
             for x in &xs {
-                sum += *x;
+                sum += black_box(*x);
             }
 
             black_box(sum);
@@ -48,7 +48,7 @@ fn sum(criterion: &mut Criterion) {
             let mut sum = Float62::default();
 
             for x in &xs {
-                sum += *x;
+                sum += black_box(*x);
             }
 
             black_box(sum);
