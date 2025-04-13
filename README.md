@@ -9,4 +9,4 @@ NaN boxing without boxing.
 
 ## License
 
-[The Unlicense](UNLICENSE)
+[MIT](LICENSE)
