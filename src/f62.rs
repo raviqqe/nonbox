@@ -153,7 +153,7 @@ impl Float62 {
             };
         };
 
-        return Self::from_integer(operate_integer(x, y));
+        Self::from_integer(operate_integer(x, y))
     }
 }
 

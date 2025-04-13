@@ -25,7 +25,7 @@ fn sum(criterion: &mut Criterion) {
 
     criterion.bench_function("sum_f64", |bencher| {
         let xs = (0..ITERATION_COUNT as u64)
-            .map(|index| f64::from_bits(index))
+            .map(f64::from_bits)
             .collect::<Vec<_>>();
 
         bencher.iter(|| {
@@ -41,7 +41,7 @@ fn sum(criterion: &mut Criterion) {
 
     criterion.bench_function("sum_f62", |bencher| {
         let xs = (0..ITERATION_COUNT as i64)
-            .map(|index| Float62::from_integer(index))
+            .map(Float62::from_integer)
             .collect::<Vec<_>>();
 
         bencher.iter(|| {
