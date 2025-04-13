@@ -61,7 +61,7 @@ pub const fn box_float(number: f64) -> u64 {
 
 /// Unboxes a 64-bit floating-point number.
 #[inline]
-pub fn unbox_float(number: u64) -> Option<f64> {
+pub const fn unbox_float(number: u64) -> Option<f64> {
     if is_f62(number) {
         Some(unbox_float_unchecked(number))
     } else {
@@ -70,7 +70,7 @@ pub fn unbox_float(number: u64) -> Option<f64> {
 }
 
 #[inline]
-fn unbox_float_unchecked(number: u64) -> f64 {
+const fn unbox_float_unchecked(number: u64) -> f64 {
     let exponent_tail = 2 - (number >> 63);
 
     f64::from_bits((number & !0b11 | exponent_tail).rotate_right(ROTATION_COUNT))
@@ -90,56 +90,59 @@ pub struct Float62(u64);
 impl Float62 {
     /// Creates a 62-bit floating-point number from its raw representation.
     #[inline]
-    pub fn from_bits(number: u64) -> Self {
+    pub const fn from_bits(number: u64) -> Self {
         Self(number)
     }
 
     /// Returns a raw representation.
     #[inline]
-    pub fn to_bits(self) -> u64 {
+    pub const fn to_bits(self) -> u64 {
         self.0
     }
 
     /// Creates a 62-bit floating-point number from a payload.
     #[inline]
-    pub fn from_payload(payload: u64) -> Self {
+    pub const fn from_payload(payload: u64) -> Self {
         Self::from_bits(box_payload(payload))
     }
 
     /// Creates a 62-bit floating-point number from an integer.
     #[inline]
-    pub fn from_integer(integer: i64) -> Self {
+    pub const fn from_integer(integer: i64) -> Self {
         Self::from_bits(box_integer(integer))
     }
 
     /// Creates a 62-bit floating-point number from a 64-bit floating-point number.
     #[inline]
-    pub fn from_float(number: f64) -> Self {
+    pub const fn from_float(number: f64) -> Self {
         Self::from_bits(box_float(number))
     }
 
     /// Returns a payload.
     #[inline]
-    pub fn to_payload(self) -> Option<u64> {
+    pub const fn to_payload(self) -> Option<u64> {
         unbox_payload(self.0)
     }
 
     /// Returns an integer.
     #[inline]
-    pub fn to_integer(self) -> Option<i64> {
+    pub const fn to_integer(self) -> Option<i64> {
         unbox_integer(self.0)
     }
 
     /// Returns a 64-bit floating-point number.
     #[inline]
-    pub fn to_float(self) -> Option<f64> {
+    pub const fn to_float(self) -> Option<f64> {
         unbox_float(self.0)
     }
 
     #[inline]
-    fn to_number(self) -> Result<i64, f64> {
-        self.to_integer()
-            .ok_or_else(|| unbox_float_unchecked(self.0))
+    const fn to_number(self) -> Result<i64, f64> {
+        if let Some(integer) = self.to_integer() {
+            Ok(integer)
+        } else {
+            Err(unbox_float_unchecked(self.0))
+        }
     }
 }
 
