@@ -34,11 +34,15 @@ fn sum(criterion: &mut Criterion) {
     });
 
     criterion.bench_function("sum_f62", |bencher| {
+        let xs = (0..ITERATION_COUNT as u64)
+            .map(|index| Float62::from_integer(index as i64))
+            .collect::<Vec<_>>();
+
         bencher.iter(|| {
             let mut sum = Float62::default();
 
-            for index in 0..ITERATION_COUNT as i64 {
-                sum += black_box(Float62::from_integer(black_box(index)));
+            for x in &xs {
+                sum += *x;
             }
 
             black_box(sum);
