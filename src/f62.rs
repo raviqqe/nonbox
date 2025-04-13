@@ -138,22 +138,22 @@ impl Float62 {
 }
 
 macro_rules! operate {
-    ($self:ident, $rhs:ident, $operate:$ident) => {
-        fn calculate_float(lhs: Float62, rhs: Float62) -> Self {
+    ($lhs:ident, $rhs:ident, $operate:ident) => {{
+        fn calculate_float(lhs: Float62, rhs: Float62) -> Float62 {
             match (lhs.to_number(), rhs.to_number()) {
                 (Ok(_), Ok(_)) => unreachable!(),
-                (Ok(x), Err(y)) => Self::from_float((x as f64).$operate(y)),
-                (Err(x), Ok(y)) => Self::from_float(x.$operate(y as f64)),
-                (Err(x), Err(y)) => Self::from_float(x.$operate(y)),
+                (Ok(x), Err(y)) => Float62::from_float((x as f64).$operate(y)),
+                (Err(x), Ok(y)) => Float62::from_float(x.$operate(y as f64)),
+                (Err(x), Err(y)) => Float62::from_float(x.$operate(y)),
             }
         }
 
-        let (Some(x), Some(y)) = (self.to_integer(), rhs.to_integer()) else {
-            return calculate_float(self, rhs);
+        let (Some(x), Some(y)) = ($lhs.to_integer(), $rhs.to_integer()) else {
+            return calculate_float($lhs, $rhs);
         };
 
-        Self::from_integer(operate_integer(x, y))
-    };
+        Self::from_integer(x.$operate(y))
+    }};
 }
 
 impl Add for Float62 {
