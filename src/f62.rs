@@ -6,13 +6,13 @@ use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAss
 const ROTATION_COUNT: u32 = 3;
 
 /// Boxes a 63-bit unsigned integer.
-#[inline(always)]
+#[inline]
 pub const fn box_integer(integer: i64) -> u64 {
     (integer << 1) as _
 }
 
 /// Unboxes a 63-bit unsigned integer.
-#[inline(always)]
+#[inline]
 pub const fn unbox_integer(number: u64) -> Option<i64> {
     if is_integer(number) {
         Some(number as i64 >> 1)
@@ -22,19 +22,19 @@ pub const fn unbox_integer(number: u64) -> Option<i64> {
 }
 
 /// Returns `true` if a number is an integer.
-#[inline(always)]
+#[inline]
 pub const fn is_integer(number: u64) -> bool {
     number & 1 == 0
 }
 
 /// Boxes a 62-bit payload.
-#[inline(always)]
+#[inline]
 pub const fn box_payload(payload: u64) -> u64 {
     (payload << 2) | 1
 }
 
 /// Unboxes a 62-bit payload.
-#[inline(always)]
+#[inline]
 pub const fn unbox_payload(number: u64) -> Option<u64> {
     if is_payload(number) {
         Some(number >> 2)
@@ -44,13 +44,13 @@ pub const fn unbox_payload(number: u64) -> Option<u64> {
 }
 
 /// Returns `true` if a number is a payload.
-#[inline(always)]
+#[inline]
 pub const fn is_payload(number: u64) -> bool {
     number & 0b11 == 1
 }
 
 /// Boxes a 64-bit floating-point number.
-#[inline(always)]
+#[inline]
 pub const fn box_float(number: f64) -> u64 {
     if number == 0.0 {
         number.to_bits()
@@ -60,7 +60,7 @@ pub const fn box_float(number: f64) -> u64 {
 }
 
 /// Unboxes a 64-bit floating-point number.
-#[inline(always)]
+#[inline]
 pub fn unbox_float(number: u64) -> Option<f64> {
     if is_f62(number) {
         Some(unbox_float_unchecked(number))
@@ -69,7 +69,7 @@ pub fn unbox_float(number: u64) -> Option<f64> {
     }
 }
 
-#[inline(always)]
+#[inline]
 fn unbox_float_unchecked(number: u64) -> f64 {
     let exponent_tail = 2 - (number >> 63);
 
@@ -77,7 +77,7 @@ fn unbox_float_unchecked(number: u64) -> f64 {
 }
 
 /// Returns `true` if a number is a 62-bit floating-point number.
-#[inline(always)]
+#[inline]
 pub const fn is_f62(number: u64) -> bool {
     number & 0b11 == 0b11
 }
@@ -89,54 +89,54 @@ pub struct Float62(u64);
 
 impl Float62 {
     /// Creates a 62-bit floating-point number from its binary representation.
-    #[inline(always)]
+    #[inline]
     pub fn new(number: u64) -> Self {
         Self(number)
     }
 
     /// Creates a 62-bit floating-point number from a payload.
-    #[inline(always)]
+    #[inline]
     pub fn from_payload(payload: u64) -> Self {
         Self::new(box_payload(payload))
     }
 
     /// Creates a 62-bit floating-point number from an integer.
-    #[inline(always)]
+    #[inline]
     pub fn from_integer(integer: i64) -> Self {
         Self::new(box_integer(integer))
     }
 
     /// Creates a 62-bit floating-point number from a 64-bit floating-point number.
-    #[inline(always)]
+    #[inline]
     pub fn from_float(number: f64) -> Self {
         Self::new(box_float(number))
     }
 
     /// Returns a payload.
-    #[inline(always)]
+    #[inline]
     pub fn to_payload(self) -> Option<u64> {
         unbox_payload(self.0)
     }
 
     /// Returns an integer.
-    #[inline(always)]
+    #[inline]
     pub fn to_integer(self) -> Option<i64> {
         unbox_integer(self.0)
     }
 
     /// Returns a 64-bit floating-point number.
-    #[inline(always)]
+    #[inline]
     pub fn to_float(self) -> Option<f64> {
         unbox_float(self.0)
     }
 
-    #[inline(always)]
+    #[inline]
     fn to_number(self) -> Result<i64, f64> {
         self.to_integer()
             .ok_or_else(|| unbox_float_unchecked(self.0))
     }
 
-    #[inline(always)]
+    #[inline]
     fn operate(
         self,
         rhs: Self,
@@ -155,7 +155,7 @@ impl Float62 {
 impl Add for Float62 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn add(self, rhs: Self) -> Self::Output {
         self.operate(rhs, Add::add, Add::add)
     }
@@ -164,7 +164,7 @@ impl Add for Float62 {
 impl Sub for Float62 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
         self.operate(rhs, Sub::sub, Sub::sub)
     }
@@ -173,7 +173,7 @@ impl Sub for Float62 {
 impl Mul for Float62 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         self.operate(rhs, Mul::mul, Mul::mul)
     }
@@ -182,35 +182,35 @@ impl Mul for Float62 {
 impl Div for Float62 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn div(self, rhs: Self) -> Self::Output {
         self.operate(rhs, Div::div, Div::div)
     }
 }
 
 impl AddAssign for Float62 {
-    #[inline(always)]
+    #[inline]
     fn add_assign(&mut self, rhs: Self) {
         *self = *self + rhs;
     }
 }
 
 impl SubAssign for Float62 {
-    #[inline(always)]
+    #[inline]
     fn sub_assign(&mut self, rhs: Self) {
         *self = *self - rhs;
     }
 }
 
 impl MulAssign for Float62 {
-    #[inline(always)]
+    #[inline]
     fn mul_assign(&mut self, rhs: Self) {
         *self = *self * rhs;
     }
 }
 
 impl DivAssign for Float62 {
-    #[inline(always)]
+    #[inline]
     fn div_assign(&mut self, rhs: Self) {
         *self = *self / rhs;
     }
@@ -219,7 +219,7 @@ impl DivAssign for Float62 {
 impl Neg for Float62 {
     type Output = Self;
 
-    #[inline(always)]
+    #[inline]
     fn neg(self) -> Self::Output {
         match self.to_number() {
             Ok(x) => Self::from_integer(-x),
