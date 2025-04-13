@@ -94,6 +94,12 @@ impl Float62 {
         Self(number)
     }
 
+    /// Returns a raw representation.
+    #[inline]
+    pub fn to_raw(self) -> u64 {
+        self.0
+    }
+
     /// Creates a 62-bit floating-point number from a payload.
     #[inline]
     pub fn from_payload(payload: u64) -> Self {
