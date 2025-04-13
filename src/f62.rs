@@ -292,5 +292,65 @@ mod tests {
                 Float62::from_float(5.0)
             );
         }
+
+        #[test]
+        fn sub() {
+            assert_eq!(
+                Float62::from_integer(2) - Float62::from_integer(3),
+                Float62::from_integer(-1)
+            );
+            assert_eq!(
+                Float62::from_integer(2) - Float62::from_float(3.0),
+                Float62::from_float(-1.0)
+            );
+            assert_eq!(
+                Float62::from_float(2.0) - Float62::from_integer(3),
+                Float62::from_float(-1.0)
+            );
+            assert_eq!(
+                Float62::from_float(2.0) - Float62::from_float(3.0),
+                Float62::from_float(-1.0)
+            );
+        }
+
+        #[test]
+        fn mul() {
+            assert_eq!(
+                Float62::from_integer(2) * Float62::from_integer(3),
+                Float62::from_integer(6)
+            );
+            assert_eq!(
+                Float62::from_integer(2) * Float62::from_float(3.0),
+                Float62::from_float(6.0)
+            );
+            assert_eq!(
+                Float62::from_float(2.0) * Float62::from_integer(3),
+                Float62::from_float(6.0)
+            );
+            assert_eq!(
+                Float62::from_float(2.0) * Float62::from_float(3.0),
+                Float62::from_float(6.0)
+            );
+        }
+
+        #[test]
+        fn div() {
+            assert_eq!(
+                Float62::from_integer(6) / Float62::from_integer(2),
+                Float62::from_integer(3)
+            );
+            assert_eq!(
+                Float62::from_integer(6) / Float62::from_float(2.0),
+                Float62::from_float(3.0)
+            );
+            assert_eq!(
+                Float62::from_float(6.0) / Float62::from_integer(2),
+                Float62::from_float(3.0)
+            );
+            assert_eq!(
+                Float62::from_float(6.0) / Float62::from_float(2.0),
+                Float62::from_float(3.0)
+            );
+        }
     }
 }
