@@ -1,6 +1,8 @@
 //! NaN boxing for 62-bit floating-pointer numbers encompassing 63-bit integers
 //! and 62-bit payloads.
 
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+
 const ROTATION_COUNT: u32 = 3;
 
 /// Boxes a 63-bit unsigned integer.
@@ -53,14 +55,16 @@ pub const fn box_float(number: f64) -> u64 {
 /// Unboxes a 64-bit floating-point number.
 pub fn unbox_float(number: u64) -> Option<f64> {
     if is_f62(number) {
-        let exponent_tail = 2 - (number >> 63);
-
-        Some(f64::from_bits(
-            (number & !0b11 | exponent_tail).rotate_right(ROTATION_COUNT),
-        ))
+        Some(unbox_float_unchecked(number))
     } else {
         None
     }
+}
+
+fn unbox_float_unchecked(number: u64) -> f64 {
+    let exponent_tail = 2 - (number >> 63);
+
+    f64::from_bits((number & !0b11 | exponent_tail).rotate_right(ROTATION_COUNT))
 }
 
 /// Returns `true` if a number is a 62-bit floating-point number.
@@ -107,6 +111,82 @@ impl Float62 {
     /// Returns a 64-bit floating-point number.
     pub fn to_float(self) -> Option<f64> {
         unbox_float(self.0)
+    }
+
+    fn to_number(self) -> Result<i64, f64> {
+        self.to_integer()
+            .ok_or_else(|| unbox_float_unchecked(self.0))
+    }
+
+    #[inline(always)]
+    fn operate(
+        self,
+        rhs: Self,
+        operate_integer: fn(i64, i64) -> i64,
+        operate_float: fn(f64, f64) -> f64,
+    ) -> Self {
+        match (self.to_number(), rhs.to_number()) {
+            (Ok(x), Ok(y)) => Self::from_integer(operate_integer(x, y)),
+            (Ok(x), Err(y)) => Self::from_float(operate_float(x as f64, y)),
+            (Err(x), Ok(y)) => Self::from_float(operate_float(x, y as f64)),
+            (Err(x), Err(y)) => Self::from_float(operate_float(x, y)),
+        }
+    }
+}
+
+impl Add for Float62 {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        self.operate(rhs, Add::add, Add::add)
+    }
+}
+
+impl Sub for Float62 {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.operate(rhs, Sub::sub, Sub::sub)
+    }
+}
+
+impl Mul for Float62 {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        self.operate(rhs, Mul::mul, Mul::mul)
+    }
+}
+
+impl Div for Float62 {
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        self.operate(rhs, Div::div, Div::div)
+    }
+}
+
+impl AddAssign for Float62 {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
+    }
+}
+
+impl SubAssign for Float62 {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
+    }
+}
+
+impl MulAssign for Float62 {
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = *self * rhs;
+    }
+}
+
+impl DivAssign for Float62 {
+    fn div_assign(&mut self, rhs: Self) {
+        *self = *self / rhs;
     }
 }
 
