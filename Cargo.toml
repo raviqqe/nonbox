@@ -1,9 +1,9 @@
 [package]
 name = "nonbox"
 description = "NaN boxing without boxing"
-version = "0.5.1"
+version = "0.5.2"
 edition = "2021"
-license-file = "./UNLICENSE"
+license-file = "./LICENSE"
 repository = "https://github.com/raviqqe/nonbox"
 
 [workspace.lints.rust]
