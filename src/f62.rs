@@ -88,34 +88,34 @@ pub const fn is_f62(number: u64) -> bool {
 pub struct Float62(u64);
 
 impl Float62 {
-    /// Creates a 62-bit floating-point number from its binary representation.
+    /// Creates a 62-bit floating-point number from its raw representation.
     #[inline]
-    pub fn new(number: u64) -> Self {
+    pub fn from_bits(number: u64) -> Self {
         Self(number)
     }
 
     /// Returns a raw representation.
     #[inline]
-    pub fn to_raw(self) -> u64 {
+    pub fn to_bits(self) -> u64 {
         self.0
     }
 
     /// Creates a 62-bit floating-point number from a payload.
     #[inline]
     pub fn from_payload(payload: u64) -> Self {
-        Self::new(box_payload(payload))
+        Self::from_bits(box_payload(payload))
     }
 
     /// Creates a 62-bit floating-point number from an integer.
     #[inline]
     pub fn from_integer(integer: i64) -> Self {
-        Self::new(box_integer(integer))
+        Self::from_bits(box_integer(integer))
     }
 
     /// Creates a 62-bit floating-point number from a 64-bit floating-point number.
     #[inline]
     pub fn from_float(number: f64) -> Self {
-        Self::new(box_float(number))
+        Self::from_bits(box_float(number))
     }
 
     /// Returns a payload.
