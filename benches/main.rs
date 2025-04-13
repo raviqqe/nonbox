@@ -10,11 +10,13 @@ const ITERATION_COUNT: usize = 10000;
 
 fn sum(criterion: &mut Criterion) {
     criterion.bench_function("sum_u64", |bencher| {
+        let xs = (0..ITERATION_COUNT as i64).collect::<Vec<_>>();
+
         bencher.iter(|| {
             let mut sum = 0;
 
-            for index in 0..ITERATION_COUNT as u64 {
-                sum += black_box(index);
+            for x in &xs {
+                sum += *x;
             }
 
             black_box(sum);
@@ -22,11 +24,15 @@ fn sum(criterion: &mut Criterion) {
     });
 
     criterion.bench_function("sum_f64", |bencher| {
+        let xs = (0..ITERATION_COUNT as u64)
+            .map(|index| f64::from_bits(index))
+            .collect::<Vec<_>>();
+
         bencher.iter(|| {
             let mut sum = 0.0;
 
-            for index in 0..ITERATION_COUNT as u64 {
-                sum += f64::from_bits(black_box(index));
+            for x in &xs {
+                sum += *x;
             }
 
             black_box(sum);
@@ -34,8 +40,8 @@ fn sum(criterion: &mut Criterion) {
     });
 
     criterion.bench_function("sum_f62", |bencher| {
-        let xs = (0..ITERATION_COUNT as u64)
-            .map(|index| Float62::from_integer(index as i64))
+        let xs = (0..ITERATION_COUNT as i64)
+            .map(|index| Float62::from_integer(index))
             .collect::<Vec<_>>();
 
         bencher.iter(|| {
