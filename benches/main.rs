@@ -37,8 +37,8 @@ fn sum(criterion: &mut Criterion) {
         bencher.iter(|| {
             let mut sum = Float62::default();
 
-            for index in 0..ITERATION_COUNT as u64 {
-                sum += f64::from_bits(black_box(index));
+            for index in 0..ITERATION_COUNT as i64 {
+                sum += black_box(Float62::from_integer(black_box(index)));
             }
 
             black_box(sum);
