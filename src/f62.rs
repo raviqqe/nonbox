@@ -161,7 +161,7 @@ impl Add for Float62 {
 
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
-        operate!(self, rhs, Add::add)
+        operate!(self, rhs, add)
     }
 }
 
@@ -170,7 +170,7 @@ impl Sub for Float62 {
 
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
-        self.operate(rhs, Sub::sub, Sub::sub)
+        operate!(self, rhs, sub)
     }
 }
 
@@ -179,7 +179,7 @@ impl Mul for Float62 {
 
     #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
-        self.operate(rhs, Mul::mul, Mul::mul)
+        operate!(self, rhs, mul)
     }
 }
 
@@ -188,7 +188,7 @@ impl Div for Float62 {
 
     #[inline]
     fn div(self, rhs: Self) -> Self::Output {
-        self.operate(rhs, Div::div, Div::div)
+        operate!(self, rhs, div)
     }
 }
 
