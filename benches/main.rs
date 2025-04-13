@@ -40,18 +40,18 @@ fn f64(criterion: &mut Criterion) {
         })
     });
 
-    criterion.bench_function("f64_box_signed", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as i64 {
-                black_box(f64::box_signed(black_box(index)));
-            }
-        })
-    });
-
     criterion.bench_function("f64_unbox_unsigned", |bencher| {
         bencher.iter(|| {
             for index in 0..ITERATION_COUNT as u64 {
                 black_box(f64::unbox_unsigned(black_box(index)));
+            }
+        })
+    });
+
+    criterion.bench_function("f64_box_signed", |bencher| {
+        bencher.iter(|| {
+            for index in 0..ITERATION_COUNT as i64 {
+                black_box(f64::box_signed(black_box(index)));
             }
         })
     });
