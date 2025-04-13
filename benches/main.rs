@@ -1,7 +1,10 @@
 #![allow(missing_docs)]
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use nonbox::{f62, f64};
+use nonbox::{
+    f62::{self, Float62},
+    f64,
+};
 
 const ITERATION_COUNT: usize = 10000;
 
@@ -21,6 +24,18 @@ fn sum(criterion: &mut Criterion) {
     criterion.bench_function("sum_f64", |bencher| {
         bencher.iter(|| {
             let mut sum = 0.0;
+
+            for index in 0..ITERATION_COUNT as u64 {
+                sum += f64::from_bits(black_box(index));
+            }
+
+            black_box(sum);
+        })
+    });
+
+    criterion.bench_function("sum_f62", |bencher| {
+        bencher.iter(|| {
+            let mut sum = Float62::default();
 
             for index in 0..ITERATION_COUNT as u64 {
                 sum += f64::from_bits(black_box(index));

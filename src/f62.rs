@@ -73,7 +73,7 @@ pub const fn is_f62(number: u64) -> bool {
 }
 
 /// A 62-bit floating-point number.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 #[repr(transparent)]
 pub struct Float62(u64);
 
@@ -231,5 +231,15 @@ mod tests {
         assert_eq!(unbox_float(box_float(-1.0)), Some(-1.0));
         assert_eq!(unbox_float(box_float(42.0)), Some(42.0));
         assert_eq!(unbox_float(box_float(-42.0)), Some(-42.0));
+    }
+
+    mod float62 {
+        use super::*;
+
+        #[test]
+        fn default() {
+            assert_eq!(Float62::default(), Float62::from_integer(0));
+            assert_eq!(Float62::default(), Float62::from_float(0.0));
+        }
     }
 }
