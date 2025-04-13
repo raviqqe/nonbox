@@ -1,17 +1,54 @@
 #![allow(missing_docs)]
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use nonbox::{f62, f64};
+use nonbox::{
+    f62::{self, Float62},
+    f64,
+};
 
 const ITERATION_COUNT: usize = 10000;
 
 fn sum(criterion: &mut Criterion) {
-    criterion.bench_function("sum", |bencher| {
+    criterion.bench_function("sum_u64", |bencher| {
+        let xs = (0..ITERATION_COUNT as i64).collect::<Vec<_>>();
+
         bencher.iter(|| {
             let mut sum = 0;
 
-            for index in 0..ITERATION_COUNT as u64 {
-                sum += black_box(index);
+            for x in &xs {
+                sum += black_box(*x);
+            }
+
+            black_box(sum);
+        })
+    });
+
+    criterion.bench_function("sum_f64", |bencher| {
+        let xs = (0..ITERATION_COUNT as u64)
+            .map(f64::from_bits)
+            .collect::<Vec<_>>();
+
+        bencher.iter(|| {
+            let mut sum = 0.0;
+
+            for x in &xs {
+                sum += black_box(*x);
+            }
+
+            black_box(sum);
+        })
+    });
+
+    criterion.bench_function("sum_f62", |bencher| {
+        let xs = (0..ITERATION_COUNT as i64)
+            .map(Float62::from_integer)
+            .collect::<Vec<_>>();
+
+        bencher.iter(|| {
+            let mut sum = Float62::default();
+
+            for x in &xs {
+                sum += black_box(*x);
             }
 
             black_box(sum);
@@ -28,18 +65,18 @@ fn f64(criterion: &mut Criterion) {
         })
     });
 
-    criterion.bench_function("f64_box_signed", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as i64 {
-                black_box(f64::box_signed(black_box(index)));
-            }
-        })
-    });
-
     criterion.bench_function("f64_unbox_unsigned", |bencher| {
         bencher.iter(|| {
             for index in 0..ITERATION_COUNT as u64 {
                 black_box(f64::unbox_unsigned(black_box(index)));
+            }
+        })
+    });
+
+    criterion.bench_function("f64_box_signed", |bencher| {
+        bencher.iter(|| {
+            for index in 0..ITERATION_COUNT as i64 {
+                black_box(f64::box_signed(black_box(index)));
             }
         })
     });
@@ -86,18 +123,18 @@ fn f62(criterion: &mut Criterion) {
         })
     });
 
-    criterion.bench_function("f62_box_f62", |bencher| {
+    criterion.bench_function("f62_box_float", |bencher| {
         bencher.iter(|| {
             for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::box_f62(black_box(f64::from_bits(index))));
+                black_box(f62::box_float(black_box(f64::from_bits(index))));
             }
         })
     });
 
-    criterion.bench_function("f62_unbox_f62", |bencher| {
+    criterion.bench_function("f62_unbox_float", |bencher| {
         bencher.iter(|| {
             for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::unbox_f62(black_box(index)));
+                black_box(f62::unbox_float(black_box(index)));
             }
         })
     });

@@ -6,11 +6,13 @@ const EXPONENT_MASK: u64 = 0x7ffc << EXPONENT_MASK_OFFSET;
 const PAYLOAD_MASK: u64 = !(0xfffc << EXPONENT_MASK_OFFSET);
 
 /// Boxes a 50-bit unsigned integer.
+#[inline]
 pub const fn box_unsigned(payload: u64) -> u64 {
     EXPONENT_MASK | payload
 }
 
 /// Unboxes a 50-bit unsigned integer.
+#[inline]
 pub const fn unbox_unsigned(number: u64) -> Option<u64> {
     if is_boxed(number) {
         Some(number & PAYLOAD_MASK)
@@ -20,11 +22,13 @@ pub const fn unbox_unsigned(number: u64) -> Option<u64> {
 }
 
 /// Boxes a 51-bit signed integer.
+#[inline]
 pub const fn box_signed(payload: i64) -> u64 {
     (if payload < 0 { SIGN_MASK } else { 0 }) | box_unsigned(payload.unsigned_abs())
 }
 
 /// Unboxes a 51-bit signed integer.
+#[inline]
 pub const fn unbox_signed(number: u64) -> Option<i64> {
     if let Some(value) = unbox_unsigned(number) {
         Some((if number & SIGN_MASK == 0 { 1 } else { -1 }) * value as i64)
@@ -34,6 +38,7 @@ pub const fn unbox_signed(number: u64) -> Option<i64> {
 }
 
 /// Returns `true` if a payload is boxed in a given number.
+#[inline]
 pub const fn is_boxed(number: u64) -> bool {
     number & EXPONENT_MASK == EXPONENT_MASK
 }
