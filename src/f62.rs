@@ -135,26 +135,25 @@ impl Float62 {
         self.to_integer()
             .ok_or_else(|| unbox_float_unchecked(self.0))
     }
+}
 
-    #[inline]
-    fn operate(
-        self,
-        rhs: Self,
-        operate_integer: fn(i64, i64) -> i64,
-        operate_float: fn(f64, f64) -> f64,
-    ) -> Self {
-        let (Some(x), Some(y)) = (self.to_integer(), self.to_integer()) else {
-            // Slow path
-            return match (self.to_number(), rhs.to_number()) {
+macro_rules! operate {
+    ($lhs:ident, $rhs:ident, $operate:ident) => {{
+        fn calculate_float(lhs: Float62, rhs: Float62) -> Float62 {
+            match (lhs.to_number(), rhs.to_number()) {
                 (Ok(_), Ok(_)) => unreachable!(),
-                (Ok(x), Err(y)) => Self::from_float(operate_float(x as f64, y)),
-                (Err(x), Ok(y)) => Self::from_float(operate_float(x, y as f64)),
-                (Err(x), Err(y)) => Self::from_float(operate_float(x, y)),
-            };
+                (Ok(x), Err(y)) => Float62::from_float((x as f64).$operate(y)),
+                (Err(x), Ok(y)) => Float62::from_float(x.$operate(y as f64)),
+                (Err(x), Err(y)) => Float62::from_float(x.$operate(y)),
+            }
+        }
+
+        let (Some(x), Some(y)) = ($lhs.to_integer(), $rhs.to_integer()) else {
+            return calculate_float($lhs, $rhs);
         };
 
-        Self::from_integer(operate_integer(x, y))
-    }
+        Self::from_integer(x.$operate(y))
+    }};
 }
 
 impl Add for Float62 {
@@ -162,7 +161,7 @@ impl Add for Float62 {
 
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
-        self.operate(rhs, Add::add, Add::add)
+        operate!(self, rhs, add)
     }
 }
 
@@ -171,7 +170,7 @@ impl Sub for Float62 {
 
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
-        self.operate(rhs, Sub::sub, Sub::sub)
+        operate!(self, rhs, sub)
     }
 }
 
@@ -180,7 +179,7 @@ impl Mul for Float62 {
 
     #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
-        self.operate(rhs, Mul::mul, Mul::mul)
+        operate!(self, rhs, mul)
     }
 }
 
@@ -189,7 +188,7 @@ impl Div for Float62 {
 
     #[inline]
     fn div(self, rhs: Self) -> Self::Output {
-        self.operate(rhs, Div::div, Div::div)
+        operate!(self, rhs, div)
     }
 }
 
@@ -272,6 +271,86 @@ mod tests {
         fn default() {
             assert_eq!(Float62::default(), Float62::from_integer(0));
             assert_eq!(Float62::default(), Float62::from_float(0.0));
+        }
+
+        #[test]
+        fn add() {
+            assert_eq!(
+                Float62::from_integer(2) + Float62::from_integer(3),
+                Float62::from_integer(5)
+            );
+            assert_eq!(
+                Float62::from_integer(2) + Float62::from_float(3.0),
+                Float62::from_float(5.0)
+            );
+            assert_eq!(
+                Float62::from_float(2.0) + Float62::from_integer(3),
+                Float62::from_float(5.0)
+            );
+            assert_eq!(
+                Float62::from_float(2.0) + Float62::from_float(3.0),
+                Float62::from_float(5.0)
+            );
+        }
+
+        #[test]
+        fn sub() {
+            assert_eq!(
+                Float62::from_integer(2) - Float62::from_integer(3),
+                Float62::from_integer(-1)
+            );
+            assert_eq!(
+                Float62::from_integer(2) - Float62::from_float(3.0),
+                Float62::from_float(-1.0)
+            );
+            assert_eq!(
+                Float62::from_float(2.0) - Float62::from_integer(3),
+                Float62::from_float(-1.0)
+            );
+            assert_eq!(
+                Float62::from_float(2.0) - Float62::from_float(3.0),
+                Float62::from_float(-1.0)
+            );
+        }
+
+        #[test]
+        fn mul() {
+            assert_eq!(
+                Float62::from_integer(2) * Float62::from_integer(3),
+                Float62::from_integer(6)
+            );
+            assert_eq!(
+                Float62::from_integer(2) * Float62::from_float(3.0),
+                Float62::from_float(6.0)
+            );
+            assert_eq!(
+                Float62::from_float(2.0) * Float62::from_integer(3),
+                Float62::from_float(6.0)
+            );
+            assert_eq!(
+                Float62::from_float(2.0) * Float62::from_float(3.0),
+                Float62::from_float(6.0)
+            );
+        }
+
+        #[test]
+        fn div() {
+            assert_eq!(
+                Float62::from_integer(6) / Float62::from_integer(2),
+                Float62::from_integer(3)
+            );
+            assert_eq!(
+                Float62::from_integer(6) / Float62::from_float(2.0),
+                Float62::from_float(3.0)
+            );
+            assert_eq!(
+                Float62::from_float(6.0) / Float62::from_integer(2),
+                Float62::from_float(3.0)
+            );
+            assert_eq!(
+                Float62::from_float(6.0) / Float62::from_float(2.0),
+                Float62::from_float(3.0)
+            );
         }
     }
 }
