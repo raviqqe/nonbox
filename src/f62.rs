@@ -142,7 +142,6 @@ macro_rules! operate {
     $self:ident,
     $rhs:ident,
     $operate_integer:$expr,
-    $operate_float:$expr,
 ) => {
         fn calculate_float(lhs: Float62, rhs: Float62) -> Self {
             match (lhs.to_number(), rhs.to_number()) {
