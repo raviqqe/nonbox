@@ -135,14 +135,24 @@ impl Float62 {
         self.to_integer()
             .ok_or_else(|| unbox_float_unchecked(self.0))
     }
+}
 
-    #[inline]
-    fn operate(
-        self,
-        rhs: Self,
-        operate_integer: fn(i64, i64) -> i64,
-        operate_float: fn(f64, f64) -> f64,
-    ) -> Self {
+macro_rules! operate {
+    (
+    $self:ident,
+    $rhs:ident,
+    $operate_integer:$expr,
+    $operate_float:$expr,
+) => {
+        fn calculate_float(lhs: Float62, rhs: Float62) -> Self {
+            match (lhs.to_number(), rhs.to_number()) {
+                (Ok(_), Ok(_)) => unreachable!(),
+                (Ok(x), Err(y)) => Self::from_float($operate_float(x as f64, y)),
+                (Err(x), Ok(y)) => Self::from_float($operate_float(x, y as f64)),
+                (Err(x), Err(y)) => Self::from_float($operate_float(x, y)),
+            }
+        }
+
         let (Some(x), Some(y)) = (self.to_integer(), self.to_integer()) else {
             // Slow path
             return match (self.to_number(), rhs.to_number()) {
@@ -154,7 +164,7 @@ impl Float62 {
         };
 
         Self::from_integer(operate_integer(x, y))
-    }
+    };
 }
 
 impl Add for Float62 {
