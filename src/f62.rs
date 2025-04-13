@@ -241,6 +241,13 @@ impl Neg for Float62 {
     }
 }
 
+impl PartialOrd for Float62 {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        operate!(self, rhs, partial_cmp)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
