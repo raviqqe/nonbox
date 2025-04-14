@@ -19,7 +19,7 @@ pub const fn box_integer(integer: i64) -> u64 {
 #[inline]
 pub const fn unbox_integer(number: u64) -> Option<i64> {
     if is_integer(number) {
-        Some(number as i64 >> 1)
+        Some(unbox_integer_unchecked(number))
     } else {
         None
     }
