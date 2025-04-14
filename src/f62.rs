@@ -287,7 +287,7 @@ impl Display for Float62 {
         } else {
             write!(
                 formatter,
-                "Float62::Payload({:x})",
+                "Float62::Payload(0x{:x})",
                 self.to_payload_unchecked()
             )
         }
@@ -474,7 +474,7 @@ mod tests {
             assert_eq!(Float62::from_float(4.2).to_string(), "Float62::Float(4.2)");
             assert_eq!(
                 Float62::from_payload(42).to_string(),
-                "Float62::Payload(42)"
+                "Float62::Payload(0x2a)"
             );
         }
     }
