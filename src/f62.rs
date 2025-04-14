@@ -3,6 +3,7 @@
 
 use core::{
     cmp::Ordering,
+    fmt::Display,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
@@ -18,10 +19,16 @@ pub const fn box_integer(integer: i64) -> u64 {
 #[inline]
 pub const fn unbox_integer(number: u64) -> Option<i64> {
     if is_integer(number) {
-        Some(number as i64 >> 1)
+        Some(unbox_integer_unchecked(number))
     } else {
         None
     }
+}
+
+/// Unboxes a 63-bit unsigned integer without any type check.
+#[inline]
+pub const fn unbox_integer_unchecked(number: u64) -> i64 {
+    number as i64 >> 1
 }
 
 /// Returns `true` if a number is an integer.
@@ -40,10 +47,16 @@ pub const fn box_payload(payload: u64) -> u64 {
 #[inline]
 pub const fn unbox_payload(number: u64) -> Option<u64> {
     if is_payload(number) {
-        Some(number >> 2)
+        Some(unbox_payload_unchecked(number))
     } else {
         None
     }
+}
+
+/// Unboxes a 62-bit payload without any type check.
+#[inline]
+pub const fn unbox_payload_unchecked(number: u64) -> u64 {
+    number >> 2
 }
 
 /// Returns `true` if a number is a payload.
@@ -72,8 +85,9 @@ pub const fn unbox_float(number: u64) -> Option<f64> {
     }
 }
 
+/// Unboxes a 64-bit floating-point number without any type check.
 #[inline]
-const fn unbox_float_unchecked(number: u64) -> f64 {
+pub const fn unbox_float_unchecked(number: u64) -> f64 {
     let exponent_tail = 2 - (number >> 63);
 
     f64::from_bits((number & !0b11 | exponent_tail).rotate_right(ROTATION_COUNT))
@@ -128,16 +142,34 @@ impl Float62 {
         unbox_payload(self.0)
     }
 
+    /// Returns a payload without any type check.
+    #[inline]
+    pub const fn to_payload_unchecked(self) -> u64 {
+        unbox_payload_unchecked(self.0)
+    }
+
     /// Returns an integer.
     #[inline]
     pub const fn to_integer(self) -> Option<i64> {
         unbox_integer(self.0)
     }
 
+    /// Returns an integer without any type check.
+    #[inline]
+    pub const fn to_integer_unchecked(self) -> i64 {
+        unbox_integer_unchecked(self.0)
+    }
+
     /// Returns a 64-bit floating-point number.
     #[inline]
     pub const fn to_float(self) -> Option<f64> {
         unbox_float(self.0)
+    }
+
+    /// Returns a 62-bit floating-point number without any type check.
+    #[inline]
+    pub const fn to_float_unchecked(self) -> f64 {
+        unbox_float_unchecked(self.0)
     }
 
     #[inline]
@@ -245,6 +277,23 @@ impl Neg for Float62 {
     }
 }
 
+impl Display for Float62 {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        if let Some(integer) = self.to_integer() {
+            write!(formatter, "Float62::Integer({})", integer)
+        } else if let Some(float) = self.to_float() {
+            write!(formatter, "Float62::Float({})", float)
+        } else {
+            write!(
+                formatter,
+                "Float62::Payload(0x{:x})",
+                self.to_payload_unchecked()
+            )
+        }
+    }
+}
+
 impl PartialOrd for Float62 {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -268,6 +317,7 @@ impl PartialOrd for Float62 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::string::ToString;
 
     #[test]
     fn integer() {
@@ -412,6 +462,19 @@ mod tests {
             assert_eq!(
                 Float62::from_integer(1).partial_cmp(&Float62::from_float(0.0)),
                 Some(Ordering::Greater)
+            );
+        }
+
+        #[test]
+        fn format() {
+            assert_eq!(
+                Float62::from_integer(42).to_string(),
+                "Float62::Integer(42)"
+            );
+            assert_eq!(Float62::from_float(4.2).to_string(), "Float62::Float(4.2)");
+            assert_eq!(
+                Float62::from_payload(42).to_string(),
+                "Float62::Payload(0x2a)"
             );
         }
     }
