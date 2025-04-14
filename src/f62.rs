@@ -128,10 +128,22 @@ impl Float62 {
         unbox_payload(self.0)
     }
 
+    /// Returns a payload without a type check.
+    #[inline]
+    pub const fn to_payload_unchecked(self) -> Option<u64> {
+        unbox_payload_unchecked(self.0)
+    }
+
     /// Returns an integer.
     #[inline]
     pub const fn to_integer(self) -> Option<i64> {
         unbox_integer(self.0)
+    }
+
+    /// Returns an integer without a type check.
+    #[inline]
+    pub const fn to_integer_unchecked(self) -> Option<i64> {
+        unbox_integer_unchecked(self.0)
     }
 
     /// Returns a 64-bit floating-point number.
