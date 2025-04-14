@@ -317,6 +317,7 @@ impl PartialOrd for Float62 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::string::ToString;
 
     #[test]
     fn integer() {
@@ -461,6 +462,19 @@ mod tests {
             assert_eq!(
                 Float62::from_integer(1).partial_cmp(&Float62::from_float(0.0)),
                 Some(Ordering::Greater)
+            );
+        }
+
+        #[test]
+        fn format() {
+            assert_eq!(
+                Float62::from_integer(42).to_string(),
+                "Float62::Integer(42)"
+            );
+            assert_eq!(Float62::from_float(4.2).to_string(), "Float62::Float(4.2)");
+            assert_eq!(
+                Float62::from_payload(42).to_string(),
+                "Float62::Payload(42)"
             );
         }
     }
