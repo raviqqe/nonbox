@@ -4,7 +4,7 @@
 use core::{
     cmp::Ordering,
     fmt::Display,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign},
 };
 
 const ROTATION_COUNT: u32 = 3;
@@ -234,6 +234,15 @@ impl Div for Float62 {
     #[inline]
     fn div(self, rhs: Self) -> Self::Output {
         operate!(self, rhs, div)
+    }
+}
+
+impl Rem for Float62 {
+    type Output = Self;
+
+    #[inline]
+    fn rem(self, rhs: Self) -> Self::Output {
+        operate!(self, rhs, rem)
     }
 }
 
