@@ -446,6 +446,26 @@ mod tests {
         }
 
         #[test]
+        fn rem() {
+            assert_eq!(
+                Float62::from_integer(6) % Float62::from_integer(2),
+                Float62::from_integer(3)
+            );
+            assert_eq!(
+                Float62::from_integer(6) % Float62::from_float(2.0),
+                Float62::from_float(3.0)
+            );
+            assert_eq!(
+                Float62::from_float(6.0) % Float62::from_integer(2),
+                Float62::from_float(3.0)
+            );
+            assert_eq!(
+                Float62::from_float(6.0) % Float62::from_float(2.0),
+                Float62::from_float(3.0)
+            );
+        }
+
+        #[test]
         fn cmp() {
             assert_eq!(
                 Float62::from_integer(0).partial_cmp(&Float62::from_integer(1)),
