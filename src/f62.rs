@@ -1,7 +1,10 @@
 //! NaN boxing for 62-bit floating-pointer numbers encompassing 63-bit integers
 //! and 62-bit payloads.
 
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use core::{
+    cmp::Ordering,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 const ROTATION_COUNT: u32 = 3;
 
@@ -112,7 +115,8 @@ impl Float62 {
         Self::from_bits(box_integer(integer))
     }
 
-    /// Creates a 62-bit floating-point number from a 64-bit floating-point number.
+    /// Creates a 62-bit floating-point number from a 64-bit floating-point
+    /// number.
     #[inline]
     pub const fn from_float(number: f64) -> Self {
         Self::from_bits(box_float(number))
@@ -241,6 +245,26 @@ impl Neg for Float62 {
     }
 }
 
+impl PartialOrd for Float62 {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        fn compare_float(lhs: Float62, rhs: Float62) -> Option<Ordering> {
+            match (lhs.to_number(), rhs.to_number()) {
+                (Ok(_), Ok(_)) => unreachable!(),
+                (Ok(x), Err(y)) => (x as f64).partial_cmp(&y),
+                (Err(x), Ok(y)) => x.partial_cmp(&(y as f64)),
+                (Err(x), Err(y)) => x.partial_cmp(&y),
+            }
+        }
+
+        let (Some(x), Some(y)) = (self.to_integer(), other.to_integer()) else {
+            return compare_float(*self, *other);
+        };
+
+        x.partial_cmp(&y)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -359,6 +383,35 @@ mod tests {
             assert_eq!(
                 Float62::from_float(6.0) / Float62::from_float(2.0),
                 Float62::from_float(3.0)
+            );
+        }
+
+        #[test]
+        fn cmp() {
+            assert_eq!(
+                Float62::from_integer(0).partial_cmp(&Float62::from_integer(1)),
+                Some(Ordering::Less)
+            );
+            assert_eq!(
+                Float62::from_integer(0).partial_cmp(&Float62::from_float(1.0)),
+                Some(Ordering::Less)
+            );
+            assert_eq!(
+                Float62::from_integer(0).partial_cmp(&Float62::from_integer(1)),
+                Some(Ordering::Less)
+            );
+            assert_eq!(
+                Float62::from_float(0.0).partial_cmp(&Float62::from_integer(1)),
+                Some(Ordering::Less)
+            );
+
+            assert_eq!(
+                Float62::from_integer(42).partial_cmp(&Float62::from_float(42.0)),
+                Some(Ordering::Equal)
+            );
+            assert_eq!(
+                Float62::from_integer(1).partial_cmp(&Float62::from_float(0.0)),
+                Some(Ordering::Greater)
             );
         }
     }
