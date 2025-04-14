@@ -1,7 +1,10 @@
 //! NaN boxing for 62-bit floating-pointer numbers encompassing 63-bit integers
 //! and 62-bit payloads.
 
-use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use core::{
+    cmp::Ordering,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 const ROTATION_COUNT: u32 = 3;
 
@@ -243,8 +246,21 @@ impl Neg for Float62 {
 
 impl PartialOrd for Float62 {
     #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-        operate!(self, rhs, partial_cmp)
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        fn calculate_float(lhs: Float62, rhs: Float62) -> Option<Ordering> {
+            match (lhs.to_number(), rhs.to_number()) {
+                (Ok(_), Ok(_)) => unreachable!(),
+                (Ok(x), Err(y)) => (x as f64).partial_cmp(&y),
+                (Err(x), Ok(y)) => x.partial_cmp(&(y as f64)),
+                (Err(x), Err(y)) => x.partial_cmp(&y),
+            }
+        }
+
+        let (Some(x), Some(y)) = (self.to_integer(), other.to_integer()) else {
+            return calculate_float(*self, *other);
+        };
+
+        x.partial_cmp(y)
     }
 }
 
