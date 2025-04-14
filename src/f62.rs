@@ -65,7 +65,7 @@ pub const fn box_float(number: f64) -> u64 {
 /// Unboxes a 64-bit floating-point number.
 #[inline]
 pub const fn unbox_float(number: u64) -> Option<f64> {
-    if is_f62(number) {
+    if is_float(number) {
         Some(unbox_float_unchecked(number))
     } else {
         None
@@ -81,7 +81,7 @@ const fn unbox_float_unchecked(number: u64) -> f64 {
 
 /// Returns `true` if a number is a 62-bit floating-point number.
 #[inline]
-pub const fn is_f62(number: u64) -> bool {
+pub const fn is_float(number: u64) -> bool {
     number & 0b11 == 0b11
 }
 
@@ -289,7 +289,7 @@ mod tests {
 
     #[test]
     fn f62() {
-        assert!(is_f62(box_float(1.0)));
+        assert!(is_float(box_float(1.0)));
         assert_eq!(unbox_float(box_float(0.0)), None);
         assert_eq!(unbox_float(box_float(1.0)), Some(1.0));
         assert_eq!(unbox_float(box_float(-1.0)), Some(-1.0));
