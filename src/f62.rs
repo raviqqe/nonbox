@@ -290,15 +290,11 @@ impl Display for Float62 {
     #[inline]
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if let Some(integer) = self.to_integer() {
-            write!(formatter, "Float62::Integer({})", integer)
+            write!(formatter, "{}", integer)
         } else if let Some(float) = self.to_float() {
-            write!(formatter, "Float62::Float({})", float)
+            write!(formatter, "{}", float)
         } else {
-            write!(
-                formatter,
-                "Float62::Payload(0x{:x})",
-                self.to_payload_unchecked()
-            )
+            write!(formatter, "0x{:x}", self.to_payload_unchecked())
         }
     }
 }
@@ -496,15 +492,9 @@ mod tests {
 
         #[test]
         fn format() {
-            assert_eq!(
-                Float62::from_integer(42).to_string(),
-                "Float62::Integer(42)"
-            );
-            assert_eq!(Float62::from_float(4.2).to_string(), "Float62::Float(4.2)");
-            assert_eq!(
-                Float62::from_payload(42).to_string(),
-                "Float62::Payload(0x2a)"
-            );
+            assert_eq!(Float62::from_integer(42).to_string(), "42");
+            assert_eq!(Float62::from_float(4.2).to_string(), "4.2");
+            assert_eq!(Float62::from_payload(42).to_string(), "0x2a");
         }
     }
 }
