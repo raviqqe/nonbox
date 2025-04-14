@@ -260,7 +260,7 @@ impl PartialOrd for Float62 {
             return calculate_float(*self, *other);
         };
 
-        x.partial_cmp(y)
+        x.partial_cmp(&y)
     }
 }
 
