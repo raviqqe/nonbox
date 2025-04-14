@@ -247,7 +247,7 @@ impl Neg for Float62 {
 impl PartialOrd for Float62 {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        fn calculate_float(lhs: Float62, rhs: Float62) -> Option<Ordering> {
+        fn compare_float(lhs: Float62, rhs: Float62) -> Option<Ordering> {
             match (lhs.to_number(), rhs.to_number()) {
                 (Ok(_), Ok(_)) => unreachable!(),
                 (Ok(x), Err(y)) => (x as f64).partial_cmp(&y),
@@ -257,7 +257,7 @@ impl PartialOrd for Float62 {
         }
 
         let (Some(x), Some(y)) = (self.to_integer(), other.to_integer()) else {
-            return calculate_float(*self, *other);
+            return compare_float(*self, *other);
         };
 
         x.partial_cmp(&y)
