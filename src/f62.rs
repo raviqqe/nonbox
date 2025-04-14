@@ -115,7 +115,8 @@ impl Float62 {
         Self::from_bits(box_integer(integer))
     }
 
-    /// Creates a 62-bit floating-point number from a 64-bit floating-point number.
+    /// Creates a 62-bit floating-point number from a 64-bit floating-point
+    /// number.
     #[inline]
     pub const fn from_float(number: f64) -> Self {
         Self::from_bits(box_float(number))
