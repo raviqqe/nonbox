@@ -100,7 +100,7 @@ pub const fn is_float(number: u64) -> bool {
 }
 
 /// A 62-bit floating-point number.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 #[repr(transparent)]
 pub struct Float62(u64);
 
