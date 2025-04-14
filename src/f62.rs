@@ -46,7 +46,7 @@ pub const fn box_payload(payload: u64) -> u64 {
 #[inline]
 pub const fn unbox_payload(number: u64) -> Option<u64> {
     if is_payload(number) {
-        Some(unbox_payload(number >> 2))
+        Some(unbox_payload_unchecked(number))
     } else {
         None
     }
