@@ -384,5 +384,34 @@ mod tests {
                 Float62::from_float(3.0)
             );
         }
+
+        #[test]
+        fn cmp() {
+            assert_eq!(
+                Float62::from_integer(0).partial_cmp(&Float62::from_integer(1)),
+                Some(Ordering::Less)
+            );
+            assert_eq!(
+                Float62::from_integer(0).partial_cmp(&Float62::from_float(1.0)),
+                Some(Ordering::Less)
+            );
+            assert_eq!(
+                Float62::from_integer(0).partial_cmp(&Float62::from_integer(1)),
+                Some(Ordering::Less)
+            );
+            assert_eq!(
+                Float62::from_float(0.0).partial_cmp(&Float62::from_integer(1)),
+                Some(Ordering::Less)
+            );
+
+            assert_eq!(
+                Float62::from_integer(42).partial_cmp(&Float62::from_float(42.0)),
+                Some(Ordering::Equal)
+            );
+            assert_eq!(
+                Float62::from_integer(1).partial_cmp(&Float62::from_float(0.0)),
+                Some(Ordering::Greater)
+            );
+        }
     }
 }
