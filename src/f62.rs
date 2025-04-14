@@ -4,7 +4,7 @@
 use core::{
     cmp::Ordering,
     fmt::Display,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, Sub, SubAssign},
 };
 
 const ROTATION_COUNT: u32 = 3;
@@ -237,6 +237,15 @@ impl Div for Float62 {
     }
 }
 
+impl Rem for Float62 {
+    type Output = Self;
+
+    #[inline]
+    fn rem(self, rhs: Self) -> Self::Output {
+        operate!(self, rhs, rem)
+    }
+}
+
 impl AddAssign for Float62 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
@@ -433,6 +442,26 @@ mod tests {
             assert_eq!(
                 Float62::from_float(6.0) / Float62::from_float(2.0),
                 Float62::from_float(3.0)
+            );
+        }
+
+        #[test]
+        fn rem() {
+            assert_eq!(
+                Float62::from_integer(5) % Float62::from_integer(2),
+                Float62::from_integer(1)
+            );
+            assert_eq!(
+                Float62::from_integer(5) % Float62::from_float(2.0),
+                Float62::from_float(1.0)
+            );
+            assert_eq!(
+                Float62::from_float(5.0) % Float62::from_integer(2),
+                Float62::from_float(1.0)
+            );
+            assert_eq!(
+                Float62::from_float(5.0) % Float62::from_float(2.0),
+                Float62::from_float(1.0)
             );
         }
 
