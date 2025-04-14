@@ -24,6 +24,12 @@ pub const fn unbox_integer(number: u64) -> Option<i64> {
     }
 }
 
+/// Unboxes a 63-bit unsigned integer without any type check.
+#[inline]
+pub const fn unbox_integer_unchecked(number: u64) -> i64 {
+    number as i64 >> 1
+}
+
 /// Returns `true` if a number is an integer.
 #[inline]
 pub const fn is_integer(number: u64) -> bool {
@@ -40,10 +46,16 @@ pub const fn box_payload(payload: u64) -> u64 {
 #[inline]
 pub const fn unbox_payload(number: u64) -> Option<u64> {
     if is_payload(number) {
-        Some(number >> 2)
+        Some(unbox_payload(number >> 2))
     } else {
         None
     }
+}
+
+/// Unboxes a 62-bit payload without any type check.
+#[inline]
+pub const fn unbox_payload_unchecked(number: u64) -> u64 {
+    number >> 2
 }
 
 /// Returns `true` if a number is a payload.
