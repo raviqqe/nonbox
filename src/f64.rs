@@ -15,10 +15,16 @@ pub const fn box_unsigned(payload: u64) -> u64 {
 #[inline]
 pub const fn unbox_unsigned(number: u64) -> Option<u64> {
     if is_boxed(number) {
-        Some(number & PAYLOAD_MASK)
+        Some(unbox_unsigned_unchecked(number))
     } else {
         None
     }
+}
+
+/// Unboxes a 50-bit unsigned integer without any type check.
+#[inline]
+pub const fn unbox_unsigned_unchecked(number: u64) -> u64 {
+    number & PAYLOAD_MASK
 }
 
 /// Boxes a 51-bit signed integer.
