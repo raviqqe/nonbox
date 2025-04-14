@@ -3,6 +3,7 @@
 
 use core::{
     cmp::Ordering,
+    fmt::Display,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
@@ -272,6 +273,23 @@ impl Neg for Float62 {
         match self.to_number() {
             Ok(x) => Self::from_integer(-x),
             Err(x) => Self::from_float(-x),
+        }
+    }
+}
+
+impl Display for Float62 {
+    #[inline]
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        if let Some(integer) = self.to_integer() {
+            write!(formatter, "Float62::Integer({})", integer)
+        } else if let Some(float) = self.to_float() {
+            write!(formatter, "Float62::Float({})", float)
+        } else {
+            write!(
+                formatter,
+                "Float62::Payload({:x})",
+                self.to_payload_unchecked()
+            )
         }
     }
 }
