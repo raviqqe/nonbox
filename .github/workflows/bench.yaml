@@ -23,6 +23,7 @@ jobs:
       - run: cargo codspeed build
       - uses: codspeedhq/action@v4
         with:
+          mode: instrumentation
           run: cargo codspeed run
           token: ${{ secrets.CODSPEED_TOKEN }}
   bench:
