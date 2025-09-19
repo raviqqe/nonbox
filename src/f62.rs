@@ -100,7 +100,7 @@ pub const fn is_float(number: u64) -> bool {
 }
 
 /// A 62-bit floating-point number.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct Float62(u64);
 
@@ -290,9 +290,9 @@ impl Display for Float62 {
     #[inline]
     fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         if let Some(integer) = self.to_integer() {
-            write!(formatter, "{}", integer)
+            write!(formatter, "{integer}")
         } else if let Some(float) = self.to_float() {
-            write!(formatter, "{}", float)
+            write!(formatter, "{float}")
         } else {
             write!(formatter, "0x{:x}", self.to_payload_unchecked())
         }
