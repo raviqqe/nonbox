@@ -9,11 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: swatinem/rust-cache@v2
+      - uses: raviqqe/cargo-cache@v1
       - run: cargo build
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: swatinem/rust-cache@v2
+      - uses: raviqqe/cargo-cache@v1
       - run: cargo test
