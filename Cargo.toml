@@ -1,16 +1,19 @@
 [package]
 name = "nonbox"
-description = "NaN boxing without boxing"
-version = "0.5.10"
+version = "0.5.11"
 edition = "2021"
-license-file = "./LICENSE"
+description = "NaN boxing without boxing"
 repository = "https://github.com/raviqqe/nonbox"
+license-file = "./LICENSE"
 
-[workspace.lints.rust]
-missing_docs = "deny"
-warnings = "deny"
+[[bench]]
+harness = false
+name = "main"
 
-[workspace.lints.clippy]
+[dev-dependencies]
+criterion = { version = "2.7.2", package = "codspeed-criterion-compat" }
+
+[lints.clippy]
 alloc_instead_of_core = "deny"
 dbg_macro = "deny"
 derive_partial_eq_without_eq = "deny"
@@ -28,9 +31,6 @@ uninlined_format_args = "deny"
 unused_self = "deny"
 use_self = "deny"
 
-[dev-dependencies]
-criterion = { package = "codspeed-criterion-compat", version = "2.7.2" }
-
-[[bench]]
-name = "main"
-harness = false
+[lints.rust]
+missing_docs = "deny"
+warnings = "deny"
