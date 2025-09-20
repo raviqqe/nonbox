@@ -1,6 +1,6 @@
 [package]
 name = "nonbox"
-version = "0.5.11"
+version = "0.5.12"
 edition = "2021"
 description = "NaN boxing without boxing"
 repository = "https://github.com/raviqqe/nonbox"
