@@ -1,6 +1,6 @@
 [package]
 name = "nonbox"
-version = "0.5.12"
+version = "0.5.13"
 edition = "2021"
 description = "NaN boxing without boxing"
 repository = "https://github.com/raviqqe/nonbox"
@@ -11,7 +11,7 @@ harness = false
 name = "main"
 
 [dev-dependencies]
-criterion = { version = "2.7.2", package = "codspeed-criterion-compat" }
+criterion = { package = "codspeed-criterion-compat", version = "2.7.2" }
 
 [lints.clippy]
 alloc_instead_of_core = "deny"
