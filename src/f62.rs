@@ -492,6 +492,10 @@ mod tests {
 
         #[test]
         fn format() {
+            assert_eq!(Float62::from_integer(0).to_string(), "0");
+            assert_eq!(Float62::from_integer(1).to_string(), "1");
+            assert_eq!(Float62::from_float(0.0).to_string(), "0");
+            assert_eq!(Float62::from_float(1.0).to_string(), "1");
             assert_eq!(Float62::from_integer(42).to_string(), "42");
             assert_eq!(Float62::from_float(4.2).to_string(), "4.2");
             assert_eq!(Float62::from_payload(42).to_string(), "0x2a");
