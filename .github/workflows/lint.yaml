@@ -27,4 +27,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      - uses: raviqqe/markdown-link-check@eaa1146b58da2062fe6a6e7a72785f57251243e6 # v1.0.2
+      - uses: raviqqe/markdown-link-check@f0dffa8d9e25af28aef34fa60088907525c96597 # v1.0.3
