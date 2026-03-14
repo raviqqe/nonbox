@@ -12,13 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: raviqqe/cargo-cache@6d2d8fbe4fc04627b0a05f603fce1dc9fd0baf0d # v1.0.0
+      - uses: raviqqe/cargo-cache@d53766599ee6a51208b334007191e3de6ac7bff9 # v1.0.1
       - run: cargo bench
   codspeed:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: raviqqe/cargo-cache@6d2d8fbe4fc04627b0a05f603fce1dc9fd0baf0d # v1.0.0
+      - uses: raviqqe/cargo-cache@d53766599ee6a51208b334007191e3de6ac7bff9 # v1.0.1
       - run: cargo install --features vendored-openssl cargo-codspeed
       - run: cargo codspeed build
       - uses: codspeedhq/action@281164b0f014a4e7badd2c02cecad9b595b70537 # v4.11.1
