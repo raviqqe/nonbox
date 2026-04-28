@@ -21,7 +21,7 @@ jobs:
       - uses: raviqqe/cargo-cache@4c7db86c0f73cc94a5608ad8b09e7a8e136fd259 # v1.0.4
       - run: cargo install --features vendored-openssl cargo-codspeed
       - run: cargo codspeed build
-      - uses: codspeedhq/action@658a901452bb54c799643e060733b7afe9121b8d # v4.14.0
+      - uses: codspeedhq/action@c381be0bfd20e844fb45594f6aa182ffcd94545c # v4.15.0
         with:
           mode: instrumentation
           run: cargo codspeed run
