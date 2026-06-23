@@ -347,7 +347,7 @@ impl PartialOrd for Float62 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::string::ToString;
+    use alloc::string::ToString;
 
     #[test]
     fn integer() {
