@@ -69,7 +69,7 @@ pub const fn is_payload(number: u64) -> bool {
 #[inline]
 pub const fn box_float(number: f64) -> u64 {
     if number == 0.0 {
-        number.to_bits()
+        0
     } else {
         number.to_bits().rotate_left(ROTATION_COUNT) | 0b11
     }
@@ -246,6 +246,31 @@ impl Rem for Float62 {
     }
 }
 
+impl Float62 {
+    /// Divides this number by another number, returning `None` when both
+    /// numbers are integers and the divisor is zero.
+    #[inline]
+    pub fn checked_div(self, rhs: Self) -> Option<Self> {
+        let (Some(x), Some(y)) = (self.to_integer(), rhs.to_integer()) else {
+            return Some(self / rhs);
+        };
+
+        Some(Self::from_integer(x.checked_div(y)?))
+    }
+
+    /// Calculates the remainder of dividing this number by another number,
+    /// returning `None` when both numbers are integers and the divisor is
+    /// zero.
+    #[inline]
+    pub fn checked_rem(self, rhs: Self) -> Option<Self> {
+        let (Some(x), Some(y)) = (self.to_integer(), rhs.to_integer()) else {
+            return Some(self % rhs);
+        };
+
+        Some(Self::from_integer(x.checked_rem(y)?))
+    }
+}
+
 impl AddAssign for Float62 {
     #[inline]
     fn add_assign(&mut self, rhs: Self) {
@@ -322,7 +347,7 @@ impl PartialOrd for Float62 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::string::ToString;
+    use alloc::string::ToString;
 
     #[test]
     fn integer() {
@@ -352,6 +377,13 @@ mod tests {
         assert_eq!(unbox_float(box_float(-42.0)), Some(-42.0));
     }
 
+    #[test]
+    fn negative_zero() {
+        assert_eq!(box_float(-0.0), box_float(0.0));
+        assert_eq!(unbox_integer(box_float(-0.0)), Some(0));
+        assert_eq!(unbox_float(box_float(-0.0)), None);
+    }
+
     mod float62 {
         use super::*;
 
@@ -359,6 +391,17 @@ mod tests {
         fn default() {
             assert_eq!(Float62::default(), Float62::from_integer(0));
             assert_eq!(Float62::default(), Float62::from_float(0.0));
+        }
+
+        #[test]
+        fn negative_zero() {
+            assert_eq!(Float62::from_float(-0.0), Float62::from_integer(0));
+            assert_eq!(Float62::from_float(-0.0), Float62::from_float(0.0));
+            assert_eq!(Float62::from_float(-0.0).to_integer(), Some(0));
+            assert_eq!(
+                Float62::from_float(-1.0) * Float62::from_float(0.0),
+                Float62::from_integer(0)
+            );
         }
 
         #[test]
@@ -442,6 +485,12 @@ mod tests {
         }
 
         #[test]
+        #[should_panic]
+        fn div_by_zero() {
+            let _ = Float62::from_integer(6) / Float62::from_integer(0);
+        }
+
+        #[test]
         fn rem() {
             assert_eq!(
                 Float62::from_integer(5) % Float62::from_integer(2),
@@ -459,6 +508,106 @@ mod tests {
                 Float62::from_float(5.0) % Float62::from_float(2.0),
                 Float62::from_float(1.0)
             );
+        }
+
+        #[test]
+        #[should_panic]
+        fn rem_by_zero() {
+            let _ = Float62::from_integer(6) % Float62::from_integer(0);
+        }
+
+        #[test]
+        fn checked_div() {
+            assert_eq!(
+                Float62::from_integer(6).checked_div(Float62::from_integer(2)),
+                Some(Float62::from_integer(3))
+            );
+            assert_eq!(
+                Float62::from_integer(6).checked_div(Float62::from_float(2.0)),
+                Some(Float62::from_float(3.0))
+            );
+            assert_eq!(
+                Float62::from_float(6.0).checked_div(Float62::from_integer(2)),
+                Some(Float62::from_float(3.0))
+            );
+            assert_eq!(
+                Float62::from_float(6.0).checked_div(Float62::from_float(2.0)),
+                Some(Float62::from_float(3.0))
+            );
+            assert_eq!(
+                Float62::from_integer(-7).checked_div(Float62::from_integer(2)),
+                Some(Float62::from_integer(-3))
+            );
+            assert_eq!(
+                Float62::from_integer(7).checked_div(Float62::from_integer(-2)),
+                Some(Float62::from_integer(-3))
+            );
+        }
+
+        #[test]
+        fn checked_div_by_zero() {
+            assert_eq!(
+                Float62::from_integer(6).checked_div(Float62::from_integer(0)),
+                None
+            );
+            assert_eq!(
+                Float62::from_integer(6).checked_div(Float62::from_float(0.0)),
+                None
+            );
+            assert_eq!(
+                Float62::from_float(6.0).checked_div(Float62::from_integer(0)),
+                Some(Float62::from_float(f64::INFINITY))
+            );
+            assert_eq!(
+                Float62::from_float(6.0).checked_div(Float62::from_float(0.0)),
+                Some(Float62::from_float(f64::INFINITY))
+            );
+        }
+
+        #[test]
+        fn checked_rem() {
+            assert_eq!(
+                Float62::from_integer(5).checked_rem(Float62::from_integer(2)),
+                Some(Float62::from_integer(1))
+            );
+            assert_eq!(
+                Float62::from_integer(5).checked_rem(Float62::from_float(2.0)),
+                Some(Float62::from_float(1.0))
+            );
+            assert_eq!(
+                Float62::from_float(5.0).checked_rem(Float62::from_integer(2)),
+                Some(Float62::from_float(1.0))
+            );
+            assert_eq!(
+                Float62::from_float(5.0).checked_rem(Float62::from_float(2.0)),
+                Some(Float62::from_float(1.0))
+            );
+            assert_eq!(
+                Float62::from_integer(-7).checked_rem(Float62::from_integer(2)),
+                Some(Float62::from_integer(-1))
+            );
+            assert_eq!(
+                Float62::from_integer(7).checked_rem(Float62::from_integer(-2)),
+                Some(Float62::from_integer(1))
+            );
+        }
+
+        #[test]
+        fn checked_rem_by_zero() {
+            assert_eq!(
+                Float62::from_integer(5).checked_rem(Float62::from_integer(0)),
+                None
+            );
+            assert_eq!(
+                Float62::from_integer(5).checked_rem(Float62::from_float(0.0)),
+                None
+            );
+            assert!(Float62::from_float(5.0)
+                .checked_rem(Float62::from_integer(0))
+                .is_some());
+            assert!(Float62::from_float(5.0)
+                .checked_rem(Float62::from_float(0.0))
+                .is_some());
         }
 
         #[test]
