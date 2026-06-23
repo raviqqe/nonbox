@@ -69,7 +69,7 @@ pub const fn is_payload(number: u64) -> bool {
 #[inline]
 pub const fn box_float(number: f64) -> u64 {
     if number == 0.0 {
-        number.to_bits()
+        0
     } else {
         number.to_bits().rotate_left(ROTATION_COUNT) | 0b11
     }
@@ -377,6 +377,13 @@ mod tests {
         assert_eq!(unbox_float(box_float(-42.0)), Some(-42.0));
     }
 
+    #[test]
+    fn negative_zero() {
+        assert_eq!(box_float(-0.0), box_float(0.0));
+        assert_eq!(unbox_integer(box_float(-0.0)), Some(0));
+        assert_eq!(unbox_float(box_float(-0.0)), None);
+    }
+
     mod float62 {
         use super::*;
 
@@ -384,6 +391,17 @@ mod tests {
         fn default() {
             assert_eq!(Float62::default(), Float62::from_integer(0));
             assert_eq!(Float62::default(), Float62::from_float(0.0));
+        }
+
+        #[test]
+        fn negative_zero() {
+            assert_eq!(Float62::from_float(-0.0), Float62::from_integer(0));
+            assert_eq!(Float62::from_float(-0.0), Float62::from_float(0.0));
+            assert_eq!(Float62::from_float(-0.0).to_integer(), Some(0));
+            assert_eq!(
+                Float62::from_float(-1.0) * Float62::from_float(0.0),
+                Float62::from_integer(0)
+            );
         }
 
         #[test]
