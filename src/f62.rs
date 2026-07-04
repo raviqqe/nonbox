@@ -575,12 +575,16 @@ mod tests {
                 Float62::from_integer(5).checked_rem(Float62::from_float(0.0)),
                 None
             );
-            assert!(Float62::from_float(5.0)
-                .checked_rem(Float62::from_integer(0))
-                .is_some());
-            assert!(Float62::from_float(5.0)
-                .checked_rem(Float62::from_float(0.0))
-                .is_some());
+            assert!(
+                Float62::from_float(5.0)
+                    .checked_rem(Float62::from_integer(0))
+                    .is_some()
+            );
+            assert!(
+                Float62::from_float(5.0)
+                    .checked_rem(Float62::from_float(0.0))
+                    .is_some()
+            );
         }
 
         #[test]
