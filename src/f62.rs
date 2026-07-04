@@ -182,19 +182,21 @@ impl Float62 {
     }
 }
 
+macro_rules! operate_float {
+    ($lhs:expr, $rhs:expr, $operate:ident) => {
+        match ($lhs.to_number(), $rhs.to_number()) {
+            (Ok(_), Ok(_)) => unreachable!(),
+            (Ok(x), Err(y)) => Float62::from_float((x as f64).$operate(y)),
+            (Err(x), Ok(y)) => Float62::from_float(x.$operate(y as f64)),
+            (Err(x), Err(y)) => Float62::from_float(x.$operate(y)),
+        }
+    };
+}
+
 macro_rules! operate {
     ($lhs:ident, $rhs:ident, $operate:ident) => {{
-        fn calculate_float(lhs: Float62, rhs: Float62) -> Float62 {
-            match (lhs.to_number(), rhs.to_number()) {
-                (Ok(_), Ok(_)) => unreachable!(),
-                (Ok(x), Err(y)) => Float62::from_float((x as f64).$operate(y)),
-                (Err(x), Ok(y)) => Float62::from_float(x.$operate(y as f64)),
-                (Err(x), Err(y)) => Float62::from_float(x.$operate(y)),
-            }
-        }
-
         let (Some(x), Some(y)) = ($lhs.to_integer(), $rhs.to_integer()) else {
-            return calculate_float($lhs, $rhs);
+            return operate_float!($lhs, $rhs, $operate);
         };
 
         Self::from_integer(x.$operate(y))
@@ -233,7 +235,17 @@ impl Div for Float62 {
 
     #[inline]
     fn div(self, rhs: Self) -> Self::Output {
-        operate!(self, rhs, div)
+        let (Some(x), Some(y)) = (self.to_integer(), rhs.to_integer()) else {
+            return operate_float!(self, rhs, div);
+        };
+
+        if y == 0 {
+            Self::from_float(f64::NAN)
+        } else if x % y == 0 {
+            Self::from_integer(x / y)
+        } else {
+            Self::from_float(x as f64 / y as f64)
+        }
     }
 }
 
@@ -247,17 +259,6 @@ impl Rem for Float62 {
 }
 
 impl Float62 {
-    /// Divides this number by another number, returning `None` when both
-    /// numbers are integers and the divisor is zero.
-    #[inline]
-    pub fn checked_div(self, rhs: Self) -> Option<Self> {
-        let (Some(x), Some(y)) = (self.to_integer(), rhs.to_integer()) else {
-            return Some(self / rhs);
-        };
-
-        Some(Self::from_integer(x.checked_div(y)?))
-    }
-
     /// Calculates the remainder of dividing this number by another number,
     /// returning `None` when both numbers are integers and the divisor is
     /// zero.
@@ -471,6 +472,18 @@ mod tests {
                 Float62::from_integer(3)
             );
             assert_eq!(
+                Float62::from_integer(1) / Float62::from_integer(2),
+                Float62::from_float(0.5)
+            );
+            assert_eq!(
+                Float62::from_integer(7) / Float62::from_integer(2),
+                Float62::from_float(3.5)
+            );
+            assert_eq!(
+                Float62::from_integer(-1) / Float62::from_integer(2),
+                Float62::from_float(-0.5)
+            );
+            assert_eq!(
                 Float62::from_integer(6) / Float62::from_float(2.0),
                 Float62::from_float(3.0)
             );
@@ -485,9 +498,19 @@ mod tests {
         }
 
         #[test]
-        #[should_panic]
         fn div_by_zero() {
-            let _ = Float62::from_integer(6) / Float62::from_integer(0);
+            assert_eq!(
+                Float62::from_integer(1) / Float62::from_integer(0),
+                Float62::from_float(f64::NAN)
+            );
+            assert_eq!(
+                Float62::from_float(6.0) / Float62::from_integer(0),
+                Float62::from_float(f64::INFINITY)
+            );
+            assert_eq!(
+                Float62::from_float(6.0) / Float62::from_float(0.0),
+                Float62::from_float(f64::INFINITY)
+            );
         }
 
         #[test]
@@ -514,54 +537,6 @@ mod tests {
         #[should_panic]
         fn rem_by_zero() {
             let _ = Float62::from_integer(6) % Float62::from_integer(0);
-        }
-
-        #[test]
-        fn checked_div() {
-            assert_eq!(
-                Float62::from_integer(6).checked_div(Float62::from_integer(2)),
-                Some(Float62::from_integer(3))
-            );
-            assert_eq!(
-                Float62::from_integer(6).checked_div(Float62::from_float(2.0)),
-                Some(Float62::from_float(3.0))
-            );
-            assert_eq!(
-                Float62::from_float(6.0).checked_div(Float62::from_integer(2)),
-                Some(Float62::from_float(3.0))
-            );
-            assert_eq!(
-                Float62::from_float(6.0).checked_div(Float62::from_float(2.0)),
-                Some(Float62::from_float(3.0))
-            );
-            assert_eq!(
-                Float62::from_integer(-7).checked_div(Float62::from_integer(2)),
-                Some(Float62::from_integer(-3))
-            );
-            assert_eq!(
-                Float62::from_integer(7).checked_div(Float62::from_integer(-2)),
-                Some(Float62::from_integer(-3))
-            );
-        }
-
-        #[test]
-        fn checked_div_by_zero() {
-            assert_eq!(
-                Float62::from_integer(6).checked_div(Float62::from_integer(0)),
-                None
-            );
-            assert_eq!(
-                Float62::from_integer(6).checked_div(Float62::from_float(0.0)),
-                None
-            );
-            assert_eq!(
-                Float62::from_float(6.0).checked_div(Float62::from_integer(0)),
-                Some(Float62::from_float(f64::INFINITY))
-            );
-            assert_eq!(
-                Float62::from_float(6.0).checked_div(Float62::from_float(0.0)),
-                Some(Float62::from_float(f64::INFINITY))
-            );
         }
 
         #[test]
