@@ -182,21 +182,19 @@ impl Float62 {
     }
 }
 
-macro_rules! operate_float {
-    ($lhs:expr, $rhs:expr, $operate:ident) => {
-        match ($lhs.to_number(), $rhs.to_number()) {
-            (Ok(_), Ok(_)) => unreachable!(),
-            (Ok(x), Err(y)) => Float62::from_float((x as f64).$operate(y)),
-            (Err(x), Ok(y)) => Float62::from_float(x.$operate(y as f64)),
-            (Err(x), Err(y)) => Float62::from_float(x.$operate(y)),
-        }
-    };
+fn operate_float(lhs: Float62, rhs: Float62, operate: impl Fn(f64, f64) -> f64) -> Float62 {
+    Float62::from_float(match (lhs.to_number(), rhs.to_number()) {
+        (Ok(_), Ok(_)) => unreachable!(),
+        (Ok(x), Err(y)) => operate(x as f64, y),
+        (Err(x), Ok(y)) => operate(x, y as f64),
+        (Err(x), Err(y)) => operate(x, y),
+    })
 }
 
 macro_rules! operate {
     ($lhs:ident, $rhs:ident, $operate:ident) => {{
         let (Some(x), Some(y)) = ($lhs.to_integer(), $rhs.to_integer()) else {
-            return operate_float!($lhs, $rhs, $operate);
+            return operate_float($lhs, $rhs, f64::$operate);
         };
 
         Self::from_integer(x.$operate(y))
@@ -236,7 +234,7 @@ impl Div for Float62 {
     #[inline]
     fn div(self, rhs: Self) -> Self::Output {
         let (Some(x), Some(y)) = (self.to_integer(), rhs.to_integer()) else {
-            return operate_float!(self, rhs, div);
+            return operate_float(self, rhs, f64::div);
         };
 
         if y == 0 {
