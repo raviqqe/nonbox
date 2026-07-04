@@ -182,7 +182,7 @@ impl Float62 {
     }
 }
 
-fn operate_float(lhs: Float62, rhs: Float62, operate: impl Fn(f64, f64) -> f64) -> Float62 {
+fn operate_float(lhs: Float62, rhs: Float62, operate: fn(f64, f64) -> f64) -> Float62 {
     Float62::from_float(match (lhs.to_number(), rhs.to_number()) {
         (Ok(_), Ok(_)) => unreachable!(),
         (Ok(x), Err(y)) => operate(x as f64, y),
