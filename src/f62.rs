@@ -9,6 +9,9 @@ use core::{
 
 const ROTATION_COUNT: u32 = 3;
 
+const INTEGER_MAXIMUM: i64 = (1 << 62) - 1;
+const INTEGER_MINIMUM: i64 = -(1 << 62);
+
 const SPECIAL_TAG: u64 = 0b101;
 const NAN: u64 = SPECIAL_TAG;
 const POSITIVE_INFINITY: u64 = (1 << 3) | SPECIAL_TAG;
@@ -165,6 +168,15 @@ impl Float62 {
         Self::from_bits(box_float(number))
     }
 
+    #[inline]
+    const fn from_integer_or_float(integer: i128) -> Self {
+        if INTEGER_MINIMUM as i128 <= integer && integer <= INTEGER_MAXIMUM as i128 {
+            Self::from_integer(integer as i64)
+        } else {
+            Self::from_float(integer as f64)
+        }
+    }
+
     /// Returns a payload.
     #[inline]
     pub const fn to_payload(self) -> Option<u64> {
@@ -240,7 +252,7 @@ macro_rules! operate {
             return operate_float($lhs, $rhs, f64::$operate);
         };
 
-        Self::from_integer(x.$operate(y))
+        Self::from_integer_or_float((x as i128).$operate(y as i128))
     }};
 }
 
@@ -283,7 +295,7 @@ impl Div for Float62 {
         if y == 0 {
             Self::from_float(f64::NAN)
         } else if x % y == 0 {
-            Self::from_integer(x / y)
+            Self::from_integer_or_float(x as i128 / y as i128)
         } else {
             Self::from_float(x as f64 / y as f64)
         }
@@ -347,7 +359,7 @@ impl Neg for Float62 {
     #[inline]
     fn neg(self) -> Self::Output {
         match self.to_number() {
-            Ok(x) => Self::from_integer(-x),
+            Ok(x) => Self::from_integer_or_float(-(x as i128)),
             Err(x) => Self::from_float(-x),
         }
     }
@@ -745,6 +757,72 @@ mod tests {
                     .checked_rem(Float62::from_float(0.0))
                     .is_some()
             );
+        }
+
+        #[test]
+        fn keep_integer_within_range() {
+            assert_eq!(
+                Float62::from_integer(INTEGER_MAXIMUM - 1) + Float62::from_integer(1),
+                Float62::from_integer(INTEGER_MAXIMUM)
+            );
+            assert_eq!(
+                Float62::from_integer(INTEGER_MINIMUM + 1) - Float62::from_integer(1),
+                Float62::from_integer(INTEGER_MINIMUM)
+            );
+            assert_eq!(
+                Float62::from_integer(INTEGER_MINIMUM) / Float62::from_integer(-1)
+                    * Float62::from_integer(0),
+                Float62::from_integer(0)
+            );
+        }
+
+        #[test]
+        fn upgrade_to_float_on_addition_overflow() {
+            let sum = Float62::from_integer(INTEGER_MAXIMUM) + Float62::from_integer(1);
+
+            assert_eq!(sum.to_integer(), None);
+            assert_eq!(sum.to_float(), Some((INTEGER_MAXIMUM as i128 + 1) as f64));
+        }
+
+        #[test]
+        fn upgrade_to_float_on_subtraction_underflow() {
+            let difference = Float62::from_integer(INTEGER_MINIMUM) - Float62::from_integer(1);
+
+            assert_eq!(difference.to_integer(), None);
+            assert_eq!(
+                difference.to_float(),
+                Some((INTEGER_MINIMUM as i128 - 1) as f64)
+            );
+        }
+
+        #[test]
+        fn upgrade_to_float_on_multiplication_overflow() {
+            let product = Float62::from_integer(1 << 40) * Float62::from_integer(1 << 40);
+
+            assert_eq!(product.to_integer(), None);
+            assert_eq!(
+                product.to_float(),
+                Some(((1i128 << 40) * (1i128 << 40)) as f64)
+            );
+        }
+
+        #[test]
+        fn upgrade_to_float_on_division_overflow() {
+            let quotient = Float62::from_integer(INTEGER_MINIMUM) / Float62::from_integer(-1);
+
+            assert_eq!(quotient.to_integer(), None);
+            assert_eq!(
+                quotient.to_float(),
+                Some((INTEGER_MINIMUM as i128 / -1) as f64)
+            );
+        }
+
+        #[test]
+        fn upgrade_to_float_on_negation_overflow() {
+            let negation = -Float62::from_integer(INTEGER_MINIMUM);
+
+            assert_eq!(negation.to_integer(), None);
+            assert_eq!(negation.to_float(), Some(-(INTEGER_MINIMUM as i128) as f64));
         }
 
         #[test]
