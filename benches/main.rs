@@ -102,7 +102,7 @@ fn sum(criterion: &mut Criterion) {
     });
 }
 
-fn f64(criterion: &mut Criterion) {
+fn f64_box(criterion: &mut Criterion) {
     map(
         criterion,
         "f64_box_unsigned",
@@ -221,9 +221,7 @@ fn f62_box(criterion: &mut Criterion) {
     );
 }
 
-fn f62(criterion: &mut Criterion) {
-    f62_box(criterion);
-
+fn f62_operation(criterion: &mut Criterion) {
     let integers = (0..ITERATION_COUNT as i64)
         .map(Float62::from_integer)
         .collect::<Vec<_>>();
@@ -349,6 +347,6 @@ fn f62(criterion: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, sum, f64, f62);
+criterion_group!(benches, sum, f64_box, f62_box, f62_operation);
 
 criterion_main!(benches);
