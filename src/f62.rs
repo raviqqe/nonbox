@@ -710,6 +710,17 @@ mod tests {
         }
 
         #[test]
+        fn neg() {
+            assert_eq!(-Float62::from_integer(42), Float62::from_integer(-42));
+            assert_eq!(-Float62::from_integer(-42), Float62::from_integer(42));
+            assert_eq!(-Float62::from_float(4.2), Float62::from_float(-4.2));
+            assert_eq!(
+                -Float62::from_integer(INTEGER_MAXIMUM),
+                Float62::from_integer(INTEGER_MINIMUM + 1)
+            );
+        }
+
+        #[test]
         fn checked_rem() {
             assert_eq!(
                 Float62::from_integer(5).checked_rem(Float62::from_integer(2)),
@@ -770,9 +781,8 @@ mod tests {
                 Float62::from_integer(INTEGER_MINIMUM)
             );
             assert_eq!(
-                Float62::from_integer(INTEGER_MINIMUM) / Float62::from_integer(-1)
-                    * Float62::from_integer(0),
-                Float62::from_integer(0)
+                Float62::from_integer(INTEGER_MAXIMUM) * Float62::from_integer(1),
+                Float62::from_integer(INTEGER_MAXIMUM)
             );
         }
 
