@@ -8,6 +8,21 @@ use nonbox::{
 
 const ITERATION_COUNT: usize = 10000;
 
+fn map<I, T>(
+    criterion: &mut Criterion,
+    name: &str,
+    input: impl Fn(usize) -> I,
+    function: impl Fn(I) -> T,
+) {
+    criterion.bench_function(name, |bencher| {
+        bencher.iter(|| {
+            for index in 0..ITERATION_COUNT {
+                black_box(function(black_box(input(index))));
+            }
+        })
+    });
+}
+
 fn binary<T>(
     criterion: &mut Criterion,
     name: &str,
@@ -88,104 +103,81 @@ fn sum(criterion: &mut Criterion) {
 }
 
 fn f64(criterion: &mut Criterion) {
-    criterion.bench_function("f64_box_unsigned", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f64::box_unsigned(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f64_unbox_unsigned", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f64::unbox_unsigned(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f64_box_signed", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as i64 {
-                black_box(f64::box_signed(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f64_unbox_signed", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f64::unbox_signed(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f64_is_boxed", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f64::is_boxed(black_box(index)));
-            }
-        })
-    });
+    map(
+        criterion,
+        "f64_box_unsigned",
+        |index| index as u64,
+        f64::box_unsigned,
+    );
+    map(
+        criterion,
+        "f64_unbox_unsigned",
+        |index| index as u64,
+        f64::unbox_unsigned,
+    );
+    map(
+        criterion,
+        "f64_box_signed",
+        |index| index as i64,
+        f64::box_signed,
+    );
+    map(
+        criterion,
+        "f64_unbox_signed",
+        |index| index as u64,
+        f64::unbox_signed,
+    );
+    map(
+        criterion,
+        "f64_is_boxed",
+        |index| index as u64,
+        f64::is_boxed,
+    );
 }
 
 fn f62(criterion: &mut Criterion) {
-    criterion.bench_function("f62_box_payload", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::box_payload(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f62_unbox_payload", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::unbox_payload(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f62_unbox_payload_unchecked", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::unbox_payload_unchecked(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f62_box_integer", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as i64 {
-                black_box(f62::box_integer(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f62_unbox_integer", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::unbox_integer(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f62_unbox_integer_unchecked", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::unbox_integer_unchecked(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f62_box_float", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::box_float(black_box(f64::from_bits(index))));
-            }
-        })
-    });
-
+    map(
+        criterion,
+        "f62_box_payload",
+        |index| index as u64,
+        f62::box_payload,
+    );
+    map(
+        criterion,
+        "f62_unbox_payload",
+        |index| index as u64,
+        f62::unbox_payload,
+    );
+    map(
+        criterion,
+        "f62_unbox_payload_unchecked",
+        |index| index as u64,
+        f62::unbox_payload_unchecked,
+    );
+    map(
+        criterion,
+        "f62_box_integer",
+        |index| index as i64,
+        f62::box_integer,
+    );
+    map(
+        criterion,
+        "f62_unbox_integer",
+        |index| index as u64,
+        f62::unbox_integer,
+    );
+    map(
+        criterion,
+        "f62_unbox_integer_unchecked",
+        |index| index as u64,
+        f62::unbox_integer_unchecked,
+    );
+    map(
+        criterion,
+        "f62_box_float",
+        |index| f64::from_bits(index as u64),
+        f62::box_float,
+    );
     criterion.bench_function("f62_box_float_special", |bencher| {
         let xs = (0..ITERATION_COUNT)
             .map(|x| [f64::INFINITY, f64::NEG_INFINITY, f64::NAN, 4.2][x % 4])
@@ -197,46 +189,36 @@ fn f62(criterion: &mut Criterion) {
             }
         })
     });
-
-    criterion.bench_function("f62_unbox_float", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::unbox_float(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f62_unbox_float_unchecked", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::unbox_float_unchecked(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f62_is_integer", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::is_integer(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f62_is_payload", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::is_payload(black_box(index)));
-            }
-        })
-    });
-
-    criterion.bench_function("f62_is_float", |bencher| {
-        bencher.iter(|| {
-            for index in 0..ITERATION_COUNT as u64 {
-                black_box(f62::is_float(black_box(index)));
-            }
-        })
-    });
+    map(
+        criterion,
+        "f62_unbox_float",
+        |index| index as u64,
+        f62::unbox_float,
+    );
+    map(
+        criterion,
+        "f62_unbox_float_unchecked",
+        |index| index as u64,
+        f62::unbox_float_unchecked,
+    );
+    map(
+        criterion,
+        "f62_is_integer",
+        |index| index as u64,
+        f62::is_integer,
+    );
+    map(
+        criterion,
+        "f62_is_payload",
+        |index| index as u64,
+        f62::is_payload,
+    );
+    map(
+        criterion,
+        "f62_is_float",
+        |index| index as u64,
+        f62::is_float,
+    );
 
     let integers = (0..ITERATION_COUNT as i64)
         .map(Float62::from_integer)
