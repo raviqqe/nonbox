@@ -9,8 +9,7 @@ use core::{
 
 const ROTATION_COUNT: u32 = 3;
 
-const INTEGER_MAXIMUM: i64 = (1 << 62) - 1;
-const INTEGER_MINIMUM: i64 = -(1 << 62);
+const INTEGER_LIMIT: i64 = 1 << 62;
 
 const SPECIAL_TAG: u64 = 0b101;
 const NAN: u64 = SPECIAL_TAG;
@@ -170,7 +169,7 @@ impl Float62 {
 
     #[inline]
     const fn from_integer_or_float(integer: i128) -> Self {
-        if INTEGER_MINIMUM as i128 <= integer && integer <= INTEGER_MAXIMUM as i128 {
+        if -INTEGER_LIMIT as i128 <= integer && integer < INTEGER_LIMIT as i128 {
             Self::from_integer(integer as i64)
         } else {
             Self::from_float(integer as f64)
@@ -715,8 +714,8 @@ mod tests {
             assert_eq!(-Float62::from_integer(-42), Float62::from_integer(42));
             assert_eq!(-Float62::from_float(4.2), Float62::from_float(-4.2));
             assert_eq!(
-                -Float62::from_integer(INTEGER_MAXIMUM),
-                Float62::from_integer(INTEGER_MINIMUM + 1)
+                -Float62::from_integer(INTEGER_LIMIT - 1),
+                Float62::from_integer(-INTEGER_LIMIT + 1)
             );
         }
 
@@ -773,35 +772,35 @@ mod tests {
         #[test]
         fn keep_integer_within_range() {
             assert_eq!(
-                Float62::from_integer(INTEGER_MAXIMUM - 1) + Float62::from_integer(1),
-                Float62::from_integer(INTEGER_MAXIMUM)
+                Float62::from_integer(INTEGER_LIMIT - 2) + Float62::from_integer(1),
+                Float62::from_integer(INTEGER_LIMIT - 1)
             );
             assert_eq!(
-                Float62::from_integer(INTEGER_MINIMUM + 1) - Float62::from_integer(1),
-                Float62::from_integer(INTEGER_MINIMUM)
+                Float62::from_integer(-INTEGER_LIMIT + 1) - Float62::from_integer(1),
+                Float62::from_integer(-INTEGER_LIMIT)
             );
             assert_eq!(
-                Float62::from_integer(INTEGER_MAXIMUM) * Float62::from_integer(1),
-                Float62::from_integer(INTEGER_MAXIMUM)
+                Float62::from_integer(INTEGER_LIMIT - 1) * Float62::from_integer(1),
+                Float62::from_integer(INTEGER_LIMIT - 1)
             );
         }
 
         #[test]
         fn upgrade_to_float_on_addition_overflow() {
-            let sum = Float62::from_integer(INTEGER_MAXIMUM) + Float62::from_integer(1);
+            let sum = Float62::from_integer(INTEGER_LIMIT - 1) + Float62::from_integer(1);
 
             assert_eq!(sum.to_integer(), None);
-            assert_eq!(sum.to_float(), Some((INTEGER_MAXIMUM as i128 + 1) as f64));
+            assert_eq!(sum.to_float(), Some(INTEGER_LIMIT as f64));
         }
 
         #[test]
         fn upgrade_to_float_on_subtraction_underflow() {
-            let difference = Float62::from_integer(INTEGER_MINIMUM) - Float62::from_integer(1);
+            let difference = Float62::from_integer(-INTEGER_LIMIT) - Float62::from_integer(1);
 
             assert_eq!(difference.to_integer(), None);
             assert_eq!(
                 difference.to_float(),
-                Some((INTEGER_MINIMUM as i128 - 1) as f64)
+                Some((-(INTEGER_LIMIT as i128) - 1) as f64)
             );
         }
 
@@ -818,21 +817,18 @@ mod tests {
 
         #[test]
         fn upgrade_to_float_on_division_overflow() {
-            let quotient = Float62::from_integer(INTEGER_MINIMUM) / Float62::from_integer(-1);
+            let quotient = Float62::from_integer(-INTEGER_LIMIT) / Float62::from_integer(-1);
 
             assert_eq!(quotient.to_integer(), None);
-            assert_eq!(
-                quotient.to_float(),
-                Some((INTEGER_MINIMUM as i128 / -1) as f64)
-            );
+            assert_eq!(quotient.to_float(), Some(INTEGER_LIMIT as f64));
         }
 
         #[test]
         fn upgrade_to_float_on_negation_overflow() {
-            let negation = -Float62::from_integer(INTEGER_MINIMUM);
+            let negation = -Float62::from_integer(-INTEGER_LIMIT);
 
             assert_eq!(negation.to_integer(), None);
-            assert_eq!(negation.to_float(), Some(-(INTEGER_MINIMUM as i128) as f64));
+            assert_eq!(negation.to_float(), Some(INTEGER_LIMIT as f64));
         }
 
         #[test]
