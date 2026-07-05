@@ -131,7 +131,7 @@ pub const fn is_nan(number: u64) -> bool {
 }
 
 /// A 62-bit floating-point number.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default)]
 #[repr(transparent)]
 pub struct Float62(u64);
 
@@ -377,23 +377,26 @@ impl Display for Float62 {
     }
 }
 
+impl PartialEq for Float62 {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.partial_cmp(other) == Some(Ordering::Equal)
+    }
+}
+
 impl PartialOrd for Float62 {
     #[inline]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        fn compare_float(lhs: Float62, rhs: Float62) -> Option<Ordering> {
-            match (lhs.to_number(), rhs.to_number()) {
-                (Ok(_), Ok(_)) => unreachable!(),
-                (Ok(x), Err(y)) => (x as f64).partial_cmp(&y),
-                (Err(x), Ok(y)) => x.partial_cmp(&(y as f64)),
-                (Err(x), Err(y)) => x.partial_cmp(&y),
-            }
+        if self.0 == other.0 {
+            return (!self.is_nan()).then_some(Ordering::Equal);
         }
 
-        let (Some(x), Some(y)) = (self.to_integer(), other.to_integer()) else {
-            return compare_float(*self, *other);
-        };
-
-        x.partial_cmp(&y)
+        match (self.to_number(), other.to_number()) {
+            (Ok(x), Ok(y)) => x.partial_cmp(&y),
+            (Ok(x), Err(y)) => (x as f64).partial_cmp(&y),
+            (Err(x), Ok(y)) => x.partial_cmp(&(y as f64)),
+            (Err(x), Err(y)) => x.partial_cmp(&y),
+        }
     }
 }
 
@@ -628,10 +631,6 @@ mod tests {
 
         #[test]
         fn div_by_zero() {
-            assert_eq!(
-                Float62::from_integer(1) / Float62::from_integer(0),
-                Float62::from_float(f64::NAN)
-            );
             assert!((Float62::from_integer(1) / Float62::from_integer(0)).is_nan());
             assert_eq!(
                 Float62::from_float(6.0) / Float62::from_integer(0),
@@ -887,6 +886,47 @@ mod tests {
                 Float62::from_float(f64::NAN).partial_cmp(&Float62::from_integer(0)),
                 None
             );
+        }
+
+        #[test]
+        fn equality() {
+            assert_eq!(Float62::from_integer(4), Float62::from_float(4.0));
+            assert_eq!(Float62::from_integer(0), Float62::from_float(0.0));
+            assert_eq!(
+                Float62::from_float(f64::INFINITY),
+                Float62::from_float(f64::INFINITY)
+            );
+            assert_ne!(
+                Float62::from_float(f64::INFINITY),
+                Float62::from_float(f64::NEG_INFINITY)
+            );
+            assert_ne!(Float62::from_float(f64::NAN), Float62::from_float(f64::NAN));
+            assert_eq!(Float62::from_payload(42), Float62::from_payload(42));
+            assert_ne!(Float62::from_payload(42), Float62::from_payload(43));
+            assert_ne!(Float62::from_payload(4), Float62::from_integer(4));
+        }
+
+        #[test]
+        fn equality_matches_ordering() {
+            let values = [
+                Float62::from_integer(0),
+                Float62::from_integer(4),
+                Float62::from_integer(-4),
+                Float62::from_float(4.0),
+                Float62::from_float(4.5),
+                Float62::from_float(f64::INFINITY),
+                Float62::from_float(f64::NEG_INFINITY),
+                Float62::from_float(f64::NAN),
+                Float62::from_payload(1),
+                Float62::from_payload(2),
+            ];
+
+            for &x in &values {
+                for &y in &values {
+                    assert_eq!(x == y, x.partial_cmp(&y) == Some(Ordering::Equal));
+                    assert_eq!(x == y, y == x);
+                }
+            }
         }
 
         #[test]
