@@ -48,7 +48,7 @@ pub const fn is_integer(number: u64) -> bool {
 /// Boxes a 61-bit payload.
 #[inline]
 pub const fn box_payload(payload: u64) -> u64 {
-    (payload << 3) | 0b001
+    (payload << 3) | 1
 }
 
 /// Unboxes a 61-bit payload.
@@ -70,7 +70,7 @@ pub const fn unbox_payload_unchecked(number: u64) -> u64 {
 /// Returns `true` if a number is a payload.
 #[inline]
 pub const fn is_payload(number: u64) -> bool {
-    number & 0b111 == 0b001
+    number & 0b111 == 1
 }
 
 /// Boxes a 64-bit floating-point number.
