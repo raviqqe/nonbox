@@ -186,6 +186,18 @@ fn f62(criterion: &mut Criterion) {
         })
     });
 
+    criterion.bench_function("f62_box_float_special", |bencher| {
+        let xs = (0..ITERATION_COUNT)
+            .map(|x| [f64::INFINITY, f64::NEG_INFINITY, f64::NAN, 4.2][x % 4])
+            .collect::<Vec<_>>();
+
+        bencher.iter(|| {
+            for x in &xs {
+                black_box(f62::box_float(black_box(*x)));
+            }
+        })
+    });
+
     criterion.bench_function("f62_unbox_float", |bencher| {
         bencher.iter(|| {
             for index in 0..ITERATION_COUNT as u64 {
@@ -225,26 +237,30 @@ fn f62(criterion: &mut Criterion) {
             }
         })
     });
-}
 
-fn arithmetic(criterion: &mut Criterion) {
     let integers = (0..ITERATION_COUNT as i64)
         .map(Float62::from_integer)
         .collect::<Vec<_>>();
+    let descending_integers = (0..ITERATION_COUNT as i64)
+        .map(|x| Float62::from_integer(ITERATION_COUNT as i64 - x))
+        .collect::<Vec<_>>();
     let divisor_integers = (0..ITERATION_COUNT as i64)
         .map(|x| Float62::from_integer(x % 256 + 1))
-        .collect::<Vec<_>>();
-    let floats = (0..ITERATION_COUNT)
-        .map(|x| Float62::from_float(x as f64 + 0.5))
-        .collect::<Vec<_>>();
-    let divisor_floats = (0..ITERATION_COUNT)
-        .map(|x| Float62::from_float((x % 256) as f64 + 1.5))
         .collect::<Vec<_>>();
     let overflowing_integers = (0..ITERATION_COUNT as i64)
         .map(|x| Float62::from_integer((1 << 61) + x % 256))
         .collect::<Vec<_>>();
     let large_integers = (0..ITERATION_COUNT as i64)
         .map(|x| Float62::from_integer((1 << 40) + x))
+        .collect::<Vec<_>>();
+    let floats = (0..ITERATION_COUNT)
+        .map(|x| Float62::from_float(x as f64 + 0.5))
+        .collect::<Vec<_>>();
+    let descending_floats = (0..ITERATION_COUNT)
+        .map(|x| Float62::from_float((ITERATION_COUNT - x) as f64 + 0.5))
+        .collect::<Vec<_>>();
+    let divisor_floats = (0..ITERATION_COUNT)
+        .map(|x| Float62::from_float((x % 256) as f64 + 1.5))
         .collect::<Vec<_>>();
 
     binary(
@@ -327,34 +343,19 @@ fn arithmetic(criterion: &mut Criterion) {
         &large_integers,
         |x, y| x * y,
     );
-}
-
-fn comparison(criterion: &mut Criterion) {
-    let integers = (0..ITERATION_COUNT as i64)
-        .map(Float62::from_integer)
-        .collect::<Vec<_>>();
-    let other_integers = (0..ITERATION_COUNT as i64)
-        .map(|x| Float62::from_integer(ITERATION_COUNT as i64 - x))
-        .collect::<Vec<_>>();
-    let floats = (0..ITERATION_COUNT)
-        .map(|x| Float62::from_float(x as f64 + 0.5))
-        .collect::<Vec<_>>();
-    let other_floats = (0..ITERATION_COUNT)
-        .map(|x| Float62::from_float((ITERATION_COUNT - x) as f64 + 0.5))
-        .collect::<Vec<_>>();
 
     binary(
         criterion,
         "f62_cmp_integer",
         &integers,
-        &other_integers,
+        &descending_integers,
         |x, y| x.partial_cmp(&y),
     );
     binary(
         criterion,
         "f62_cmp_float",
         &floats,
-        &other_floats,
+        &descending_floats,
         |x, y| x.partial_cmp(&y),
     );
     binary(criterion, "f62_cmp_mixed", &integers, &floats, |x, y| {
@@ -362,6 +363,6 @@ fn comparison(criterion: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, sum, f64, f62, arithmetic, comparison);
+criterion_group!(benches, sum, f64, f62);
 
 criterion_main!(benches);
