@@ -135,7 +135,7 @@ fn f64(criterion: &mut Criterion) {
     );
 }
 
-fn f62(criterion: &mut Criterion) {
+fn f62_box(criterion: &mut Criterion) {
     map(
         criterion,
         "f62_box_payload",
@@ -219,6 +219,10 @@ fn f62(criterion: &mut Criterion) {
         |index| index as u64,
         f62::is_float,
     );
+}
+
+fn f62(criterion: &mut Criterion) {
+    f62_box(criterion);
 
     let integers = (0..ITERATION_COUNT as i64)
         .map(Float62::from_integer)
