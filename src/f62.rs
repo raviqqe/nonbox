@@ -1,5 +1,5 @@
-//! NaN boxing for 62-bit floating-pointer numbers encompassing 63-bit integers
-//! and 62-bit payloads.
+//! NaN boxing for 62-bit floating-pointer numbers encompassing 63-bit integers,
+//! 61-bit payloads, and infinities and NaN.
 
 use core::{
     cmp::Ordering,
@@ -8,6 +8,13 @@ use core::{
 };
 
 const ROTATION_COUNT: u32 = 3;
+
+const INTEGER_LIMIT: i64 = 1 << 62;
+
+const SPECIAL_TAG: u64 = 0b101;
+const NAN: u64 = SPECIAL_TAG;
+const POSITIVE_INFINITY: u64 = (1 << 3) | SPECIAL_TAG;
+const NEGATIVE_INFINITY: u64 = (2 << 3) | SPECIAL_TAG;
 
 /// Boxes a 63-bit unsigned integer.
 #[inline]
@@ -37,13 +44,13 @@ pub const fn is_integer(number: u64) -> bool {
     number & 1 == 0
 }
 
-/// Boxes a 62-bit payload.
+/// Boxes a 61-bit payload.
 #[inline]
 pub const fn box_payload(payload: u64) -> u64 {
-    (payload << 2) | 1
+    (payload << 3) | 1
 }
 
-/// Unboxes a 62-bit payload.
+/// Unboxes a 61-bit payload.
 #[inline]
 pub const fn unbox_payload(number: u64) -> Option<u64> {
     if is_payload(number) {
@@ -53,16 +60,16 @@ pub const fn unbox_payload(number: u64) -> Option<u64> {
     }
 }
 
-/// Unboxes a 62-bit payload without any type check.
+/// Unboxes a 61-bit payload without any type check.
 #[inline]
 pub const fn unbox_payload_unchecked(number: u64) -> u64 {
-    number >> 2
+    number >> 3
 }
 
 /// Returns `true` if a number is a payload.
 #[inline]
 pub const fn is_payload(number: u64) -> bool {
-    number & 0b11 == 1
+    number & 0b111 == 1
 }
 
 /// Boxes a 64-bit floating-point number.
@@ -70,6 +77,12 @@ pub const fn is_payload(number: u64) -> bool {
 pub const fn box_float(number: f64) -> u64 {
     if number == 0.0 {
         0
+    } else if number.is_nan() {
+        NAN
+    } else if number == f64::INFINITY {
+        POSITIVE_INFINITY
+    } else if number == f64::NEG_INFINITY {
+        NEGATIVE_INFINITY
     } else {
         number.to_bits().rotate_left(ROTATION_COUNT) | 0b11
     }
@@ -80,6 +93,12 @@ pub const fn box_float(number: f64) -> u64 {
 pub const fn unbox_float(number: u64) -> Option<f64> {
     if is_float(number) {
         Some(unbox_float_unchecked(number))
+    } else if is_nan(number) {
+        Some(f64::NAN)
+    } else if number == POSITIVE_INFINITY {
+        Some(f64::INFINITY)
+    } else if number == NEGATIVE_INFINITY {
+        Some(f64::NEG_INFINITY)
     } else {
         None
     }
@@ -97,6 +116,18 @@ pub const fn unbox_float_unchecked(number: u64) -> f64 {
 #[inline]
 pub const fn is_float(number: u64) -> bool {
     number & 0b11 == 0b11
+}
+
+/// Returns `true` if a number is an infinity.
+#[inline]
+pub const fn is_infinite(number: u64) -> bool {
+    number == POSITIVE_INFINITY || number == NEGATIVE_INFINITY
+}
+
+/// Returns `true` if a number is NaN.
+#[inline]
+pub const fn is_nan(number: u64) -> bool {
+    number == NAN
 }
 
 /// A 62-bit floating-point number.
@@ -136,6 +167,15 @@ impl Float62 {
         Self::from_bits(box_float(number))
     }
 
+    #[inline]
+    const fn from_integer_or_float(integer: i128) -> Self {
+        if -INTEGER_LIMIT as i128 <= integer && integer < INTEGER_LIMIT as i128 {
+            Self::from_integer(integer as i64)
+        } else {
+            Self::from_float(integer as f64)
+        }
+    }
+
     /// Returns a payload.
     #[inline]
     pub const fn to_payload(self) -> Option<u64> {
@@ -172,12 +212,26 @@ impl Float62 {
         unbox_float_unchecked(self.0)
     }
 
+    /// Returns `true` if this number is an infinity.
+    #[inline]
+    pub const fn is_infinite(self) -> bool {
+        is_infinite(self.0)
+    }
+
+    /// Returns `true` if this number is NaN.
+    #[inline]
+    pub const fn is_nan(self) -> bool {
+        is_nan(self.0)
+    }
+
     #[inline]
     const fn to_number(self) -> Result<i64, f64> {
         if let Some(integer) = self.to_integer() {
             Ok(integer)
+        } else if let Some(float) = self.to_float() {
+            Err(float)
         } else {
-            Err(unbox_float_unchecked(self.0))
+            Err(f64::NAN)
         }
     }
 }
@@ -197,7 +251,7 @@ macro_rules! operate {
             return operate_float($lhs, $rhs, f64::$operate);
         };
 
-        Self::from_integer(x.$operate(y))
+        Self::from_integer_or_float((x as i128).$operate(y as i128))
     }};
 }
 
@@ -240,7 +294,7 @@ impl Div for Float62 {
         if y == 0 {
             Self::from_float(f64::NAN)
         } else if x % y == 0 {
-            Self::from_integer(x / y)
+            Self::from_integer_or_float(x as i128 / y as i128)
         } else {
             Self::from_float(x as f64 / y as f64)
         }
@@ -304,7 +358,7 @@ impl Neg for Float62 {
     #[inline]
     fn neg(self) -> Self::Output {
         match self.to_number() {
-            Ok(x) => Self::from_integer(-x),
+            Ok(x) => Self::from_integer_or_float(-(x as i128)),
             Err(x) => Self::from_float(-x),
         }
     }
@@ -367,6 +421,16 @@ mod tests {
     }
 
     #[test]
+    fn maximum_payload() {
+        let maximum = (1 << 61) - 1;
+
+        assert!(is_payload(box_payload(maximum)));
+        assert_eq!(unbox_payload(box_payload(maximum)), Some(maximum));
+        assert!(!is_infinite(box_payload(maximum)));
+        assert!(!is_nan(box_payload(maximum)));
+    }
+
+    #[test]
     fn f62() {
         assert!(is_float(box_float(1.0)));
         assert_eq!(unbox_float(box_float(0.0)), None);
@@ -381,6 +445,73 @@ mod tests {
         assert_eq!(box_float(-0.0), box_float(0.0));
         assert_eq!(unbox_integer(box_float(-0.0)), Some(0));
         assert_eq!(unbox_float(box_float(-0.0)), None);
+    }
+
+    #[test]
+    fn infinity() {
+        assert!(is_infinite(box_float(f64::INFINITY)));
+        assert!(is_infinite(box_float(f64::NEG_INFINITY)));
+        assert_ne!(box_float(f64::INFINITY), box_float(f64::NEG_INFINITY));
+        assert_eq!(unbox_float(box_float(f64::INFINITY)), Some(f64::INFINITY));
+        assert_eq!(
+            unbox_float(box_float(f64::NEG_INFINITY)),
+            Some(f64::NEG_INFINITY)
+        );
+
+        for number in [box_float(f64::INFINITY), box_float(f64::NEG_INFINITY)] {
+            assert!(!is_nan(number));
+            assert!(!is_integer(number));
+            assert!(!is_payload(number));
+            assert!(!is_float(number));
+        }
+    }
+
+    #[test]
+    fn nan() {
+        let number = box_float(f64::NAN);
+
+        assert!(is_nan(number));
+        assert!(unbox_float(number).unwrap().is_nan());
+        assert_eq!(box_float(f64::NAN), box_float(-f64::NAN));
+        assert!(!is_infinite(number));
+        assert!(!is_integer(number));
+        assert!(!is_payload(number));
+        assert!(!is_float(number));
+    }
+
+    #[test]
+    fn distinguish_representations() {
+        let classify = |number| {
+            (
+                is_integer(number),
+                is_payload(number),
+                is_float(number),
+                is_infinite(number),
+                is_nan(number),
+            )
+        };
+
+        assert_eq!(
+            classify(box_integer(42)),
+            (true, false, false, false, false)
+        );
+        assert_eq!(
+            classify(box_payload(42)),
+            (false, true, false, false, false)
+        );
+        assert_eq!(classify(box_float(4.2)), (false, false, true, false, false));
+        assert_eq!(
+            classify(box_float(f64::INFINITY)),
+            (false, false, false, true, false)
+        );
+        assert_eq!(
+            classify(box_float(f64::NEG_INFINITY)),
+            (false, false, false, true, false)
+        );
+        assert_eq!(
+            classify(box_float(f64::NAN)),
+            (false, false, false, false, true)
+        );
     }
 
     mod float62 {
@@ -501,14 +632,54 @@ mod tests {
                 Float62::from_integer(1) / Float62::from_integer(0),
                 Float62::from_float(f64::NAN)
             );
+            assert!((Float62::from_integer(1) / Float62::from_integer(0)).is_nan());
             assert_eq!(
                 Float62::from_float(6.0) / Float62::from_integer(0),
                 Float62::from_float(f64::INFINITY)
             );
+            assert!((Float62::from_float(6.0) / Float62::from_integer(0)).is_infinite());
             assert_eq!(
                 Float62::from_float(6.0) / Float62::from_float(0.0),
                 Float62::from_float(f64::INFINITY)
             );
+        }
+
+        #[test]
+        fn infinity() {
+            assert!(Float62::from_float(f64::INFINITY).is_infinite());
+            assert!(Float62::from_float(f64::NEG_INFINITY).is_infinite());
+            assert!(!Float62::from_float(f64::INFINITY).is_nan());
+            assert_eq!(
+                Float62::from_float(f64::INFINITY).to_float(),
+                Some(f64::INFINITY)
+            );
+            assert_eq!(
+                Float62::from_float(f64::NEG_INFINITY).to_float(),
+                Some(f64::NEG_INFINITY)
+            );
+            assert_eq!(Float62::from_float(f64::INFINITY).to_integer(), None);
+            assert_eq!(Float62::from_float(f64::INFINITY).to_payload(), None);
+            assert_eq!(
+                -Float62::from_float(f64::INFINITY),
+                Float62::from_float(f64::NEG_INFINITY)
+            );
+            assert_eq!(
+                Float62::from_float(f64::INFINITY) + Float62::from_integer(1),
+                Float62::from_float(f64::INFINITY)
+            );
+            assert!(
+                (Float62::from_float(f64::INFINITY) - Float62::from_float(f64::INFINITY)).is_nan()
+            );
+        }
+
+        #[test]
+        fn nan() {
+            assert!(Float62::from_float(f64::NAN).is_nan());
+            assert!(!Float62::from_float(f64::NAN).is_infinite());
+            assert!(Float62::from_float(f64::NAN).to_float().unwrap().is_nan());
+            assert_eq!(Float62::from_float(f64::NAN).to_integer(), None);
+            assert_eq!(Float62::from_float(f64::NAN).to_payload(), None);
+            assert!((-Float62::from_float(f64::NAN)).is_nan());
         }
 
         #[test]
@@ -535,6 +706,17 @@ mod tests {
         #[should_panic]
         fn rem_by_zero() {
             let _ = Float62::from_integer(6) % Float62::from_integer(0);
+        }
+
+        #[test]
+        fn neg() {
+            assert_eq!(-Float62::from_integer(42), Float62::from_integer(-42));
+            assert_eq!(-Float62::from_integer(-42), Float62::from_integer(42));
+            assert_eq!(-Float62::from_float(4.2), Float62::from_float(-4.2));
+            assert_eq!(
+                -Float62::from_integer(INTEGER_LIMIT - 1),
+                Float62::from_integer(-INTEGER_LIMIT + 1)
+            );
         }
 
         #[test]
@@ -588,6 +770,68 @@ mod tests {
         }
 
         #[test]
+        fn keep_integer_within_range() {
+            assert_eq!(
+                Float62::from_integer(INTEGER_LIMIT - 2) + Float62::from_integer(1),
+                Float62::from_integer(INTEGER_LIMIT - 1)
+            );
+            assert_eq!(
+                Float62::from_integer(-INTEGER_LIMIT + 1) - Float62::from_integer(1),
+                Float62::from_integer(-INTEGER_LIMIT)
+            );
+            assert_eq!(
+                Float62::from_integer(INTEGER_LIMIT - 1) * Float62::from_integer(1),
+                Float62::from_integer(INTEGER_LIMIT - 1)
+            );
+        }
+
+        #[test]
+        fn upgrade_to_float_on_addition_overflow() {
+            let sum = Float62::from_integer(INTEGER_LIMIT - 1) + Float62::from_integer(1);
+
+            assert_eq!(sum.to_integer(), None);
+            assert_eq!(sum.to_float(), Some(INTEGER_LIMIT as f64));
+        }
+
+        #[test]
+        fn upgrade_to_float_on_subtraction_underflow() {
+            let difference = Float62::from_integer(-INTEGER_LIMIT) - Float62::from_integer(1);
+
+            assert_eq!(difference.to_integer(), None);
+            assert_eq!(
+                difference.to_float(),
+                Some((-(INTEGER_LIMIT as i128) - 1) as f64)
+            );
+        }
+
+        #[test]
+        fn upgrade_to_float_on_multiplication_overflow() {
+            let product = Float62::from_integer(1 << 40) * Float62::from_integer(1 << 40);
+
+            assert_eq!(product.to_integer(), None);
+            assert_eq!(
+                product.to_float(),
+                Some(((1i128 << 40) * (1i128 << 40)) as f64)
+            );
+        }
+
+        #[test]
+        fn upgrade_to_float_on_division_overflow() {
+            let quotient = Float62::from_integer(-INTEGER_LIMIT) / Float62::from_integer(-1);
+
+            assert_eq!(quotient.to_integer(), None);
+            assert_eq!(quotient.to_float(), Some(INTEGER_LIMIT as f64));
+        }
+
+        #[test]
+        fn upgrade_to_float_on_negation_overflow() {
+            let negation = -Float62::from_integer(-INTEGER_LIMIT);
+
+            assert_eq!(negation.to_integer(), None);
+            assert_eq!(negation.to_float(), Some(INTEGER_LIMIT as f64));
+        }
+
+        #[test]
         fn cmp() {
             assert_eq!(
                 Float62::from_integer(0).partial_cmp(&Float62::from_integer(1)),
@@ -617,6 +861,35 @@ mod tests {
         }
 
         #[test]
+        fn compare_infinity() {
+            assert_eq!(
+                Float62::from_float(f64::INFINITY).partial_cmp(&Float62::from_integer(0)),
+                Some(Ordering::Greater)
+            );
+            assert_eq!(
+                Float62::from_float(f64::NEG_INFINITY).partial_cmp(&Float62::from_integer(0)),
+                Some(Ordering::Less)
+            );
+            assert_eq!(
+                Float62::from_float(f64::NEG_INFINITY)
+                    .partial_cmp(&Float62::from_float(f64::INFINITY)),
+                Some(Ordering::Less)
+            );
+        }
+
+        #[test]
+        fn compare_nan() {
+            assert_eq!(
+                Float62::from_float(f64::NAN).partial_cmp(&Float62::from_float(f64::NAN)),
+                None
+            );
+            assert_eq!(
+                Float62::from_float(f64::NAN).partial_cmp(&Float62::from_integer(0)),
+                None
+            );
+        }
+
+        #[test]
         fn format() {
             assert_eq!(Float62::from_integer(0).to_string(), "0");
             assert_eq!(Float62::from_integer(1).to_string(), "1");
@@ -625,6 +898,13 @@ mod tests {
             assert_eq!(Float62::from_integer(42).to_string(), "42");
             assert_eq!(Float62::from_float(4.2).to_string(), "4.2");
             assert_eq!(Float62::from_payload(42).to_string(), "0x2a");
+        }
+
+        #[test]
+        fn format_special() {
+            assert_eq!(Float62::from_float(f64::INFINITY).to_string(), "inf");
+            assert_eq!(Float62::from_float(f64::NEG_INFINITY).to_string(), "-inf");
+            assert_eq!(Float62::from_float(f64::NAN).to_string(), "NaN");
         }
     }
 }
