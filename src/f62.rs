@@ -890,13 +890,15 @@ mod tests {
         }
 
         #[test]
-        fn add_and_subtract_match_reference() {
+        fn arithmetic_matches_reference() {
             let values = [
                 0,
                 1,
                 -1,
                 42,
                 -42,
+                1 << 26,
+                -(1 << 26),
                 1 << 40,
                 -(1 << 40),
                 INTEGER_LIMIT - 1,
@@ -915,12 +917,16 @@ mod tests {
                         (Float62::from_integer(x) - Float62::from_integer(y)).to_bits(),
                         Float62::from_integer_or_float(x as i128 - y as i128).to_bits()
                     );
+                    assert_eq!(
+                        (Float62::from_integer(x) * Float62::from_integer(y)).to_bits(),
+                        Float62::from_integer_or_float(x as i128 * y as i128).to_bits()
+                    );
                 }
             }
         }
 
         #[test]
-        fn add_and_subtract_out_of_range_integers() {
+        fn arithmetic_out_of_range_integers() {
             let big = Float62::from_bits(box_integer(1 << 60));
             let huge = Float62::from_bits(box_integer((1 << 62) - 1));
 
@@ -934,8 +940,16 @@ mod tests {
                 Float62::from_integer_or_float(0).to_bits()
             );
             assert_eq!(
+                (big * big).to_bits(),
+                Float62::from_integer_or_float((1i128 << 60) * (1i128 << 60)).to_bits()
+            );
+            assert_eq!(
                 (huge + huge).to_bits(),
                 Float62::from_integer_or_float(((1i128 << 62) - 1) * 2).to_bits()
+            );
+            assert_eq!(
+                (huge * huge).to_bits(),
+                Float62::from_integer_or_float(((1i128 << 62) - 1) * ((1i128 << 62) - 1)).to_bits()
             );
         }
 
