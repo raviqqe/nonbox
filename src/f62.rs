@@ -334,7 +334,15 @@ impl Rem for Float62 {
 
     #[inline]
     fn rem(self, rhs: Self) -> Self::Output {
-        operate!(self, rhs, rem)
+        let (Some(x), Some(y)) = (self.to_integer(), rhs.to_integer()) else {
+            return operate_float(self, rhs, f64::rem);
+        };
+
+        if y == 0 {
+            Self::from_float(f64::NAN)
+        } else {
+            Self::from_integer_or_float((x as i128) % (y as i128))
+        }
     }
 }
 
@@ -761,9 +769,10 @@ mod tests {
         }
 
         #[test]
-        #[should_panic]
         fn rem_by_zero() {
-            let _ = Float62::from_integer(6) % Float62::from_integer(0);
+            assert!((Float62::from_integer(6) % Float62::from_integer(0)).is_nan());
+            assert!((Float62::from_integer(-6) % Float62::from_integer(0)).is_nan());
+            assert!((Float62::from_float(6.0) % Float62::from_integer(0)).is_nan());
         }
 
         #[test]
