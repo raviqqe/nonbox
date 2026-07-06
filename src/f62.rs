@@ -270,12 +270,25 @@ macro_rules! operate {
     }};
 }
 
+macro_rules! add_or_subtract {
+    ($lhs:ident, $rhs:ident, $checked:ident, $operate:ident) => {{
+        if is_integer($lhs.0 | $rhs.0)
+            && let Some(number) = ($lhs.0 as i64).$checked($rhs.0 as i64)
+            && (-(2 * INTEGER_LIMIT)..2 * INTEGER_LIMIT).contains(&number)
+        {
+            Self::from_bits(number as u64)
+        } else {
+            operate!($lhs, $rhs, $operate)
+        }
+    }};
+}
+
 impl Add for Float62 {
     type Output = Self;
 
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
-        operate!(self, rhs, add)
+        add_or_subtract!(self, rhs, checked_add, add)
     }
 }
 
@@ -284,7 +297,7 @@ impl Sub for Float62 {
 
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
-        operate!(self, rhs, sub)
+        add_or_subtract!(self, rhs, checked_sub, sub)
     }
 }
 
@@ -874,6 +887,56 @@ mod tests {
 
             assert_eq!(negation.to_integer(), None);
             assert_eq!(negation.to_float(), Some(INTEGER_LIMIT as f64));
+        }
+
+        #[test]
+        fn add_and_subtract_match_reference() {
+            let values = [
+                0,
+                1,
+                -1,
+                42,
+                -42,
+                1 << 40,
+                -(1 << 40),
+                INTEGER_LIMIT - 1,
+                INTEGER_LIMIT - 2,
+                -INTEGER_LIMIT,
+                -INTEGER_LIMIT + 1,
+            ];
+
+            for &x in &values {
+                for &y in &values {
+                    assert_eq!(
+                        (Float62::from_integer(x) + Float62::from_integer(y)).to_bits(),
+                        Float62::from_integer_or_float(x as i128 + y as i128).to_bits()
+                    );
+                    assert_eq!(
+                        (Float62::from_integer(x) - Float62::from_integer(y)).to_bits(),
+                        Float62::from_integer_or_float(x as i128 - y as i128).to_bits()
+                    );
+                }
+            }
+        }
+
+        #[test]
+        fn add_and_subtract_out_of_range_integers() {
+            let big = Float62::from_bits(box_integer(1 << 60));
+            let huge = Float62::from_bits(box_integer((1 << 62) - 1));
+
+            assert_eq!(big.to_integer(), Some(1 << 60));
+            assert_eq!(
+                (big + big).to_bits(),
+                Float62::from_integer_or_float((1i128 << 60) + (1i128 << 60)).to_bits()
+            );
+            assert_eq!(
+                (big - big).to_bits(),
+                Float62::from_integer_or_float(0).to_bits()
+            );
+            assert_eq!(
+                (huge + huge).to_bits(),
+                Float62::from_integer_or_float(((1i128 << 62) - 1) * 2).to_bits()
+            );
         }
 
         #[test]
