@@ -232,7 +232,7 @@ fn f62_operation(criterion: &mut Criterion) {
         .map(|x| Float62::from_integer(x % 256 + 1))
         .collect::<Vec<_>>();
     let overflowing_integers = (0..ITERATION_COUNT as i64)
-        .map(|x| Float62::from_integer((1 << 61) + x % 256))
+        .map(|x| Float62::from_integer((1 << 52) + x % 256))
         .collect::<Vec<_>>();
     let large_integers = (0..ITERATION_COUNT as i64)
         .map(|x| Float62::from_integer((1 << 40) + x))
