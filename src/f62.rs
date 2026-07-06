@@ -75,9 +75,6 @@ pub const fn is_payload(number: u64) -> bool {
 }
 
 /// Boxes a 64-bit floating-point number.
-///
-/// Magnitudes too large or too small for the 62-bit representation saturate to
-/// an infinity or zero respectively.
 #[inline]
 pub const fn box_float(number: f64) -> u64 {
     if number == 0.0 {
