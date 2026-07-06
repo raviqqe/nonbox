@@ -266,7 +266,7 @@ macro_rules! operate {
             return operate_float($lhs, $rhs, f64::$operate);
         };
 
-        Self::from_integer_or_float((x as i128).$operate(y as i128))
+        Self::from_i128((x as i128).$operate(y as i128))
     }};
 }
 
