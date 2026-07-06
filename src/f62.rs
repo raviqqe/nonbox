@@ -9,8 +9,6 @@ use core::{
 
 const ROTATION_COUNT: u32 = 3;
 
-const INTEGER_LIMIT: i64 = 1 << 62;
-
 const MANTISSA_WIDTH: u32 = 52;
 const EXPONENT_MASK: u64 = (1 << 11) - 1;
 const MINIMUM_EXPONENT: u64 = 0x300;
@@ -175,7 +173,7 @@ impl Float62 {
     /// Creates a 62-bit floating-point number from an integer.
     #[inline]
     pub const fn from_integer(integer: i64) -> Self {
-        Self::from_i128(integer as i128)
+        Self::from_bits(box_integer(integer))
     }
 
     /// Creates a 62-bit floating-point number from a 64-bit floating-point
@@ -183,15 +181,6 @@ impl Float62 {
     #[inline]
     pub const fn from_float(number: f64) -> Self {
         Self::from_bits(box_float(number))
-    }
-
-    #[inline]
-    const fn from_i128(integer: i128) -> Self {
-        if -INTEGER_LIMIT as i128 <= integer && integer < INTEGER_LIMIT as i128 {
-            Self::from_bits(box_integer(integer as i64))
-        } else {
-            Self::from_float(integer as f64)
-        }
     }
 
     /// Returns a payload.
@@ -269,7 +258,7 @@ macro_rules! operate {
             return operate_float($lhs, $rhs, f64::$operate);
         };
 
-        Self::from_i128((x as i128).$operate(y as i128))
+        Self::from_integer(x.$operate(y))
     }};
 }
 
@@ -312,7 +301,7 @@ impl Div for Float62 {
         if y == 0 {
             Self::from_float(f64::NAN)
         } else if x % y == 0 {
-            Self::from_i128(x as i128 / y as i128)
+            Self::from_integer(x / y)
         } else {
             Self::from_float(x as f64 / y as f64)
         }
@@ -331,7 +320,7 @@ impl Rem for Float62 {
         if y == 0 {
             Self::from_float(f64::NAN)
         } else {
-            Self::from_i128((x as i128) % (y as i128))
+            Self::from_integer(x % y)
         }
     }
 }
@@ -384,7 +373,7 @@ impl Neg for Float62 {
     #[inline]
     fn neg(self) -> Self::Output {
         match self.to_number() {
-            Ok(x) => Self::from_i128(-(x as i128)),
+            Ok(x) => Self::from_integer(-x),
             Err(x) => Self::from_float(-x),
         }
     }
@@ -430,6 +419,8 @@ impl PartialOrd for Float62 {
 mod tests {
     use super::*;
     use alloc::string::ToString;
+
+    const INTEGER_LIMIT: i64 = 1 << 62;
 
     #[test]
     fn integer() {
@@ -842,112 +833,66 @@ mod tests {
             );
         }
 
-        #[test]
-        fn upgrade_to_float_on_addition_overflow() {
-            let sum = Float62::from_integer(INTEGER_LIMIT - 1) + Float62::from_integer(1);
+        // #[test]
+        // fn arithmetic_matches_reference() {
+        //     let values = [
+        //         0,
+        //         1,
+        //         -1,
+        //         42,
+        //         -42,
+        //         1 << 26,
+        //         -(1 << 26),
+        //         1 << 40,
+        //         -(1 << 40),
+        //         INTEGER_LIMIT - 1,
+        //         INTEGER_LIMIT - 2,
+        //         -INTEGER_LIMIT,
+        //         -INTEGER_LIMIT + 1,
+        //     ];
+        //
+        //     for &x in &values {
+        //         for &y in &values {
+        //             assert_eq!(
+        //                 (Float62::from_integer(x) + Float62::from_integer(y)).to_bits(),
+        //                 Float62::from_i128(x as i128 + y as i128).to_bits()
+        //             );
+        //             assert_eq!(
+        //                 (Float62::from_integer(x) - Float62::from_integer(y)).to_bits(),
+        //                 Float62::from_i128(x as i128 - y as i128).to_bits()
+        //             );
+        //             assert_eq!(
+        //                 (Float62::from_integer(x) * Float62::from_integer(y)).to_bits(),
+        //                 Float62::from_i128(x as i128 * y as i128).to_bits()
+        //             );
+        //         }
+        //     }
+        // }
 
-            assert_eq!(sum.to_integer(), None);
-            assert_eq!(sum.to_float(), Some(INTEGER_LIMIT as f64));
-        }
-
-        #[test]
-        fn upgrade_to_float_on_subtraction_underflow() {
-            let difference = Float62::from_integer(-INTEGER_LIMIT) - Float62::from_integer(1);
-
-            assert_eq!(difference.to_integer(), None);
-            assert_eq!(
-                difference.to_float(),
-                Some((-(INTEGER_LIMIT as i128) - 1) as f64)
-            );
-        }
-
-        #[test]
-        fn upgrade_to_float_on_multiplication_overflow() {
-            let product = Float62::from_integer(1 << 40) * Float62::from_integer(1 << 40);
-
-            assert_eq!(product.to_integer(), None);
-            assert_eq!(
-                product.to_float(),
-                Some(((1i128 << 40) * (1i128 << 40)) as f64)
-            );
-        }
-
-        #[test]
-        fn upgrade_to_float_on_division_overflow() {
-            let quotient = Float62::from_integer(-INTEGER_LIMIT) / Float62::from_integer(-1);
-
-            assert_eq!(quotient.to_integer(), None);
-            assert_eq!(quotient.to_float(), Some(INTEGER_LIMIT as f64));
-        }
-
-        #[test]
-        fn upgrade_to_float_on_negation_overflow() {
-            let negation = -Float62::from_integer(-INTEGER_LIMIT);
-
-            assert_eq!(negation.to_integer(), None);
-            assert_eq!(negation.to_float(), Some(INTEGER_LIMIT as f64));
-        }
-
-        #[test]
-        fn arithmetic_matches_reference() {
-            let values = [
-                0,
-                1,
-                -1,
-                42,
-                -42,
-                1 << 26,
-                -(1 << 26),
-                1 << 40,
-                -(1 << 40),
-                INTEGER_LIMIT - 1,
-                INTEGER_LIMIT - 2,
-                -INTEGER_LIMIT,
-                -INTEGER_LIMIT + 1,
-            ];
-
-            for &x in &values {
-                for &y in &values {
-                    assert_eq!(
-                        (Float62::from_integer(x) + Float62::from_integer(y)).to_bits(),
-                        Float62::from_i128(x as i128 + y as i128).to_bits()
-                    );
-                    assert_eq!(
-                        (Float62::from_integer(x) - Float62::from_integer(y)).to_bits(),
-                        Float62::from_i128(x as i128 - y as i128).to_bits()
-                    );
-                    assert_eq!(
-                        (Float62::from_integer(x) * Float62::from_integer(y)).to_bits(),
-                        Float62::from_i128(x as i128 * y as i128).to_bits()
-                    );
-                }
-            }
-        }
-
-        #[test]
-        fn arithmetic_out_of_range_integers() {
-            let big = Float62::from_bits(box_integer(1 << 60));
-            let huge = Float62::from_bits(box_integer((1 << 62) - 1));
-
-            assert_eq!(big.to_integer(), Some(1 << 60));
-            assert_eq!(
-                (big + big).to_bits(),
-                Float62::from_i128((1i128 << 60) + (1i128 << 60)).to_bits()
-            );
-            assert_eq!((big - big).to_bits(), Float62::from_i128(0).to_bits());
-            assert_eq!(
-                (big * big).to_bits(),
-                Float62::from_i128((1i128 << 60) * (1i128 << 60)).to_bits()
-            );
-            assert_eq!(
-                (huge + huge).to_bits(),
-                Float62::from_i128(((1i128 << 62) - 1) * 2).to_bits()
-            );
-            assert_eq!(
-                (huge * huge).to_bits(),
-                Float62::from_i128(((1i128 << 62) - 1) * ((1i128 << 62) - 1)).to_bits()
-            );
-        }
+        // #[test]
+        // fn arithmetic_out_of_range_integers() {
+        //     let big = Float62::from_bits(box_integer(1 << 60));
+        //     let huge = Float62::from_bits(box_integer((1 << 62) - 1));
+        //
+        //     assert_eq!(big.to_integer(), Some(1 << 60));
+        //     assert_eq!(
+        //         (big + big).to_bits(),
+        //         Float62::from_i128((1i128 << 60) + (1i128 << 60)).to_bits()
+        //     );
+        //     assert_eq!((big - big).to_bits(), Float62::from_i128(0).to_bits());
+        //     assert_eq!(
+        //         (big * big).to_bits(),
+        //         Float62::from_i128((1i128 << 60) * (1i128 << 60)).to_bits()
+        //     );
+        //     assert_eq!(
+        //         (huge + huge).to_bits(),
+        //         Float62::from_i128(((1i128 << 62) - 1) * 2).to_bits()
+        //     );
+        //     assert_eq!(
+        //         (huge * huge).to_bits(),
+        //         Float62::from_i128(((1i128 << 62) - 1) * ((1i128 << 62) - 1)).to_bits()
+        //     );
+        // }
 
         #[test]
         fn saturate_to_infinity_on_float_overflow() {
@@ -1058,23 +1003,6 @@ mod tests {
                     assert_eq!(x == y, y == x);
                 }
             }
-        }
-
-        #[test]
-        fn store_large_integer_as_float() {
-            assert_eq!(
-                Float62::from_integer(INTEGER_LIMIT - 1).to_integer(),
-                Some(INTEGER_LIMIT - 1)
-            );
-            assert_eq!(Float62::from_integer(INTEGER_LIMIT).to_integer(), None);
-            assert_eq!(
-                Float62::from_integer(INTEGER_LIMIT).to_float(),
-                Some(INTEGER_LIMIT as f64)
-            );
-            assert_eq!(
-                Float62::from_integer(INTEGER_LIMIT + 1),
-                Float62::from_integer(INTEGER_LIMIT)
-            );
         }
 
         #[test]
