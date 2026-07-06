@@ -871,8 +871,8 @@ mod tests {
 
         #[test]
         fn arithmetic_out_of_range_integers() {
-            let big = Float62::from_bits(box_integer(1 << 60));
-            let huge = Float62::from_bits(box_integer((1 << 62) - 1));
+            let big = Float62::from_integer(1 << 60);
+            let huge = Float62::from_integer(INTEGER_LIMIT - 1);
 
             assert_eq!(big.to_integer(), Some(1 << 60));
             assert_eq!(
@@ -886,11 +886,12 @@ mod tests {
             );
             assert_eq!(
                 (huge + huge).to_bits(),
-                Float62::from_integer(((1 << 62) - 1) * 2).to_bits()
+                Float62::from_integer((INTEGER_LIMIT - 1) * 2).to_bits()
             );
             assert_eq!(
                 (huge * huge).to_bits(),
-                Float62::from_integer(((1i64 << 62) - 1).wrapping_mul((1 << 62) - 1)).to_bits()
+                Float62::from_integer((INTEGER_LIMIT - 1).wrapping_mul(INTEGER_LIMIT - 1))
+                    .to_bits()
             );
         }
 
