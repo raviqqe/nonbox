@@ -393,6 +393,15 @@ impl Display for Float62 {
     }
 }
 
+fn compare_integer_and_float(integer: i64, float: f64) -> Option<Ordering> {
+    let rounded = integer as f64;
+
+    match rounded.partial_cmp(&float)? {
+        Ordering::Equal => integer.partial_cmp(&(rounded as i64)),
+        ordering => Some(ordering),
+    }
+}
+
 impl PartialEq for Float62 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -409,8 +418,8 @@ impl PartialOrd for Float62 {
 
         match (self.to_number(), other.to_number()) {
             (Ok(x), Ok(y)) => x.partial_cmp(&y),
-            (Ok(x), Err(y)) => (x as f64).partial_cmp(&y),
-            (Err(x), Ok(y)) => x.partial_cmp(&(y as f64)),
+            (Ok(x), Err(y)) => compare_integer_and_float(x, y),
+            (Err(x), Ok(y)) => compare_integer_and_float(y, x).map(Ordering::reverse),
             (Err(x), Err(y)) => x.partial_cmp(&y),
         }
     }
@@ -990,8 +999,10 @@ mod tests {
                 Float62::from_integer(0),
                 Float62::from_integer(4),
                 Float62::from_integer(-4),
+                Float62::from_integer((1 << 53) + 1),
                 Float62::from_float(4.0),
                 Float62::from_float(4.5),
+                Float62::from_float((1u64 << 53) as f64),
                 Float62::from_float(f64::INFINITY),
                 Float62::from_float(f64::NEG_INFINITY),
                 Float62::from_float(f64::NAN),
@@ -1020,9 +1031,53 @@ mod tests {
         }
 
         #[test]
+        fn compare_integer_and_float_beyond_mantissa_precision() {
+            assert_ne!(
+                Float62::from_integer((1 << 53) + 1),
+                Float62::from_float((1u64 << 53) as f64)
+            );
+            assert_eq!(
+                Float62::from_integer((1 << 53) + 1)
+                    .partial_cmp(&Float62::from_float((1u64 << 53) as f64)),
+                Some(Ordering::Greater)
+            );
+            assert_eq!(
+                Float62::from_float((1u64 << 53) as f64)
+                    .partial_cmp(&Float62::from_integer((1 << 53) + 1)),
+                Some(Ordering::Less)
+            );
+            assert_eq!(
+                Float62::from_integer(INTEGER_LIMIT - 1)
+                    .partial_cmp(&Float62::from_float((1u64 << 62) as f64)),
+                Some(Ordering::Less)
+            );
+        }
+
+        #[test]
+        fn compare_integer_and_infinity() {
+            assert_ne!(
+                Float62::from_integer(1 << 53),
+                Float62::from_float(f64::INFINITY)
+            );
+            assert_eq!(
+                Float62::from_integer(1 << 53).partial_cmp(&Float62::from_float(f64::INFINITY)),
+                Some(Ordering::Less)
+            );
+            assert_eq!(
+                Float62::from_integer(1 << 53).partial_cmp(&Float62::from_float(f64::NEG_INFINITY)),
+                Some(Ordering::Greater)
+            );
+            assert_eq!(
+                Float62::from_float(f64::INFINITY).partial_cmp(&Float62::from_integer(1 << 53)),
+                Some(Ordering::Greater)
+            );
+        }
+
+        #[test]
         fn equality_is_transitive() {
             let values = [
                 Float62::from_integer(1 << 53),
+                Float62::from_integer((1 << 53) + 1),
                 Float62::from_float((1u64 << 53) as f64),
                 Float62::from_integer(0),
                 Float62::from_float(0.0),
