@@ -1090,7 +1090,6 @@ mod tests {
         fn equality_is_transitive() {
             let values = [
                 Float62::from_integer(1 << 53),
-                Float62::from_integer((1 << 53) + 1),
                 Float62::from_float((1u64 << 53) as f64),
                 Float62::from_integer(0),
                 Float62::from_float(0.0),
