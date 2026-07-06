@@ -270,10 +270,10 @@ macro_rules! operate {
     }};
 }
 
-macro_rules! add_or_subtract {
-    ($lhs:ident, $rhs:ident, $checked:ident, $operate:ident) => {{
+macro_rules! operate_fast {
+    ($lhs:ident, $rhs:ident, $checked:ident, $factor:expr, $operate:ident) => {{
         if is_integer($lhs.0 | $rhs.0)
-            && let Some(number) = ($lhs.0 as i64).$checked($rhs.0 as i64)
+            && let Some(number) = ($lhs.0 as i64).$checked($factor)
             && (-(2 * INTEGER_LIMIT)..2 * INTEGER_LIMIT).contains(&number)
         {
             Self::from_bits(number as u64)
@@ -288,7 +288,7 @@ impl Add for Float62 {
 
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
-        add_or_subtract!(self, rhs, checked_add, add)
+        operate_fast!(self, rhs, checked_add, rhs.0 as i64, add)
     }
 }
 
@@ -297,7 +297,7 @@ impl Sub for Float62 {
 
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
-        add_or_subtract!(self, rhs, checked_sub, sub)
+        operate_fast!(self, rhs, checked_sub, rhs.0 as i64, sub)
     }
 }
 
@@ -306,7 +306,7 @@ impl Mul for Float62 {
 
     #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
-        operate!(self, rhs, mul)
+        operate_fast!(self, rhs, checked_mul, unbox_integer_unchecked(rhs.0), mul)
     }
 }
 
