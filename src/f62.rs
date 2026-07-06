@@ -8,7 +8,6 @@ use core::{
 };
 
 const ROTATION_COUNT: u32 = 3;
-
 const MANTISSA_WIDTH: u32 = 52;
 const EXPONENT_MASK: u64 = (1 << 11) - 1;
 // The 62-bit representation rebuilds the two exponent bits below the sign from
@@ -16,9 +15,7 @@ const EXPONENT_MASK: u64 = (1 << 11) - 1;
 // stays within these bounds.
 const MINIMUM_EXPONENT: u64 = 0x300;
 const MAXIMUM_EXPONENT: u64 = 0x4ff;
-
-const INTEGER_LIMIT: i64 = 1 << 62;
-
+const INTEGER_LIMIT: i64 = 1 << 53;
 const SPECIAL_TAG: u64 = 0b101;
 const NAN: u64 = SPECIAL_TAG;
 const POSITIVE_INFINITY: u64 = (1 << 3) | SPECIAL_TAG;
@@ -181,7 +178,7 @@ impl Float62 {
     /// Creates a 62-bit floating-point number from an integer.
     #[inline]
     pub const fn from_integer(integer: i64) -> Self {
-        Self::from_bits(box_integer(integer))
+        Self::from_integer_or_float(integer as i128)
     }
 
     /// Creates a 62-bit floating-point number from a 64-bit floating-point
@@ -194,7 +191,7 @@ impl Float62 {
     #[inline]
     const fn from_integer_or_float(integer: i128) -> Self {
         if -INTEGER_LIMIT as i128 <= integer && integer < INTEGER_LIMIT as i128 {
-            Self::from_integer(integer as i64)
+            Self::from_bits(box_integer(integer as i64))
         } else {
             Self::from_float(integer as f64)
         }
@@ -992,6 +989,58 @@ mod tests {
                 for &y in &values {
                     assert_eq!(x == y, x.partial_cmp(&y) == Some(Ordering::Equal));
                     assert_eq!(x == y, y == x);
+                }
+            }
+        }
+
+        #[test]
+        fn store_large_integer_as_float() {
+            assert_eq!(
+                Float62::from_integer(INTEGER_LIMIT - 1).to_integer(),
+                Some(INTEGER_LIMIT - 1)
+            );
+            assert_eq!(Float62::from_integer(INTEGER_LIMIT).to_integer(), None);
+            assert_eq!(
+                Float62::from_integer(INTEGER_LIMIT).to_float(),
+                Some(INTEGER_LIMIT as f64)
+            );
+            assert_eq!(
+                Float62::from_integer(INTEGER_LIMIT + 1),
+                Float62::from_integer(INTEGER_LIMIT)
+            );
+        }
+
+        #[test]
+        fn compare_integer_and_fractional_float() {
+            assert_eq!(
+                Float62::from_integer(1).partial_cmp(&Float62::from_float(1.5)),
+                Some(Ordering::Less)
+            );
+            assert_eq!(
+                Float62::from_integer(2).partial_cmp(&Float62::from_float(1.5)),
+                Some(Ordering::Greater)
+            );
+        }
+
+        #[test]
+        fn equality_is_transitive() {
+            let values = [
+                Float62::from_integer(1 << 53),
+                Float62::from_integer((1 << 53) + 1),
+                Float62::from_float((1u64 << 53) as f64),
+                Float62::from_integer(0),
+                Float62::from_float(0.0),
+                Float62::from_integer(4),
+                Float62::from_float(4.0),
+            ];
+
+            for &x in &values {
+                for &y in &values {
+                    for &z in &values {
+                        if x == y && y == z {
+                            assert_eq!(x, z);
+                        }
+                    }
                 }
             }
         }
