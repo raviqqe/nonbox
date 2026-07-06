@@ -288,7 +288,7 @@ impl Add for Float62 {
 
     #[inline]
     fn add(self, rhs: Self) -> Self::Output {
-        operate_fast!(self, rhs, checked_add, rhs.0 as i64, add)
+        operate!(self, rhs, add)
     }
 }
 
@@ -297,7 +297,7 @@ impl Sub for Float62 {
 
     #[inline]
     fn sub(self, rhs: Self) -> Self::Output {
-        operate_fast!(self, rhs, checked_sub, rhs.0 as i64, sub)
+        operate!(self, rhs, sub)
     }
 }
 
