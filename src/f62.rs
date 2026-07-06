@@ -10,9 +10,6 @@ use core::{
 const ROTATION_COUNT: u32 = 3;
 const MANTISSA_WIDTH: u32 = 52;
 const EXPONENT_MASK: u64 = (1 << 11) - 1;
-// The 62-bit representation rebuilds the two exponent bits below the sign from
-// the bit beneath them, so a float round-trips only while its biased exponent
-// stays within these bounds.
 const MINIMUM_EXPONENT: u64 = 0x300;
 const MAXIMUM_EXPONENT: u64 = 0x4ff;
 const INTEGER_LIMIT: i64 = 1 << 53;
