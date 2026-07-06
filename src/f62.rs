@@ -9,6 +9,14 @@ use core::{
 
 const ROTATION_COUNT: u32 = 3;
 
+const MANTISSA_WIDTH: u32 = 52;
+const EXPONENT_MASK: u64 = (1 << 11) - 1;
+// The 62-bit representation rebuilds the two exponent bits below the sign from
+// the bit beneath them, so a float round-trips only while its biased exponent
+// stays within these bounds.
+const MINIMUM_EXPONENT: u64 = 0x300;
+const MAXIMUM_EXPONENT: u64 = 0x4ff;
+
 const INTEGER_LIMIT: i64 = 1 << 62;
 
 const SPECIAL_TAG: u64 = 0b101;
@@ -73,6 +81,9 @@ pub const fn is_payload(number: u64) -> bool {
 }
 
 /// Boxes a 64-bit floating-point number.
+///
+/// Magnitudes too large or too small for the 62-bit representation saturate to
+/// an infinity or zero respectively.
 #[inline]
 pub const fn box_float(number: f64) -> u64 {
     if number == 0.0 {
@@ -84,7 +95,20 @@ pub const fn box_float(number: f64) -> u64 {
     } else if number == f64::NEG_INFINITY {
         NEGATIVE_INFINITY
     } else {
-        number.to_bits().rotate_left(ROTATION_COUNT) | 0b11
+        let bits = number.to_bits();
+        let exponent = bits >> MANTISSA_WIDTH & EXPONENT_MASK;
+
+        if exponent < MINIMUM_EXPONENT {
+            0
+        } else if exponent > MAXIMUM_EXPONENT {
+            if number < 0.0 {
+                NEGATIVE_INFINITY
+            } else {
+                POSITIVE_INFINITY
+            }
+        } else {
+            bits.rotate_left(ROTATION_COUNT) | 0b11
+        }
     }
 }
 
@@ -441,6 +465,37 @@ mod tests {
         assert_eq!(unbox_float(box_float(-1.0)), Some(-1.0));
         assert_eq!(unbox_float(box_float(42.0)), Some(42.0));
         assert_eq!(unbox_float(box_float(-42.0)), Some(-42.0));
+    }
+
+    #[test]
+    fn keep_float_within_exponent_range() {
+        let maximum = f64::from_bits(MAXIMUM_EXPONENT << MANTISSA_WIDTH);
+        let minimum = f64::from_bits(MINIMUM_EXPONENT << MANTISSA_WIDTH);
+
+        assert_eq!(unbox_float(box_float(maximum)), Some(maximum));
+        assert_eq!(unbox_float(box_float(-maximum)), Some(-maximum));
+        assert_eq!(unbox_float(box_float(minimum)), Some(minimum));
+        assert_eq!(unbox_float(box_float(-minimum)), Some(-minimum));
+    }
+
+    #[test]
+    fn saturate_to_infinity_on_overflow() {
+        let overflow = f64::from_bits((MAXIMUM_EXPONENT + 1) << MANTISSA_WIDTH);
+
+        assert_eq!(unbox_float(box_float(overflow)), Some(f64::INFINITY));
+        assert_eq!(unbox_float(box_float(-overflow)), Some(f64::NEG_INFINITY));
+        assert_eq!(unbox_float(box_float(f64::MAX)), Some(f64::INFINITY));
+        assert_eq!(unbox_float(box_float(f64::MIN)), Some(f64::NEG_INFINITY));
+    }
+
+    #[test]
+    fn flush_to_zero_on_underflow() {
+        let underflow = f64::from_bits((MINIMUM_EXPONENT - 1) << MANTISSA_WIDTH);
+
+        assert_eq!(box_float(underflow), 0);
+        assert_eq!(box_float(-underflow), 0);
+        assert_eq!(box_float(f64::MIN_POSITIVE), 0);
+        assert_eq!(unbox_integer(box_float(underflow)), Some(0));
     }
 
     #[test]
@@ -828,6 +883,18 @@ mod tests {
 
             assert_eq!(negation.to_integer(), None);
             assert_eq!(negation.to_float(), Some(INTEGER_LIMIT as f64));
+        }
+
+        #[test]
+        fn saturate_to_infinity_on_float_overflow() {
+            assert_eq!(
+                (Float62::from_float(1e70) * Float62::from_float(1e70)).to_float(),
+                Some(f64::INFINITY)
+            );
+            assert_eq!(
+                (Float62::from_float(-1e70) * Float62::from_float(1e70)).to_float(),
+                Some(f64::NEG_INFINITY)
+            );
         }
 
         #[test]
