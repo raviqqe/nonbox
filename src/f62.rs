@@ -299,6 +299,7 @@ impl Div for Float62 {
         };
 
         if y == 0 {
+            // TODO Fix this
             Self::from_float(f64::NAN)
         } else if x % y == 0 {
             Self::from_integer(x / y)
