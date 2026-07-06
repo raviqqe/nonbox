@@ -8,11 +8,14 @@ use core::{
 };
 
 const ROTATION_COUNT: u32 = 3;
+
+const INTEGER_LIMIT: i64 = 1 << 62;
+
 const MANTISSA_WIDTH: u32 = 52;
 const EXPONENT_MASK: u64 = (1 << 11) - 1;
 const MINIMUM_EXPONENT: u64 = 0x300;
 const MAXIMUM_EXPONENT: u64 = 0x4ff;
-const INTEGER_LIMIT: i64 = 1 << 62;
+
 const SPECIAL_TAG: u64 = 0b101;
 const NAN: u64 = SPECIAL_TAG;
 const POSITIVE_INFINITY: u64 = (1 << 3) | SPECIAL_TAG;
