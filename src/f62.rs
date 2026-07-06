@@ -24,13 +24,13 @@ const NAN: u64 = SPECIAL_TAG;
 const POSITIVE_INFINITY: u64 = (1 << 3) | SPECIAL_TAG;
 const NEGATIVE_INFINITY: u64 = (2 << 3) | SPECIAL_TAG;
 
-/// Boxes a 63-bit unsigned integer.
+/// Boxes a 63-bit signed integer.
 #[inline]
 pub const fn box_integer(integer: i64) -> u64 {
     (integer << 1) as _
 }
 
-/// Unboxes a 63-bit unsigned integer.
+/// Unboxes a 63-bit signed integer.
 #[inline]
 pub const fn unbox_integer(number: u64) -> Option<i64> {
     if is_integer(number) {
@@ -40,7 +40,7 @@ pub const fn unbox_integer(number: u64) -> Option<i64> {
     }
 }
 
-/// Unboxes a 63-bit unsigned integer without any type check.
+/// Unboxes a 63-bit signed integer without any type check.
 #[inline]
 pub const fn unbox_integer_unchecked(number: u64) -> i64 {
     number as i64 >> 1
