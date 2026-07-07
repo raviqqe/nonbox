@@ -298,10 +298,7 @@ impl Div for Float62 {
             return operate_float(self, rhs, f64::div);
         };
 
-        if y == 0 {
-            // TODO Fix this
-            Self::from_float(f64::NAN)
-        } else if x % y == 0 {
+        if y != 0 && x % y == 0 {
             Self::from_integer(x / y)
         } else {
             Self::from_float(x as f64 / y as f64)
@@ -689,7 +686,15 @@ mod tests {
 
         #[test]
         fn div_by_zero() {
-            assert!((Float62::from_integer(1) / Float62::from_integer(0)).is_nan());
+            assert_eq!(
+                Float62::from_integer(1) / Float62::from_integer(0),
+                Float62::from_float(f64::INFINITY)
+            );
+            assert_eq!(
+                Float62::from_integer(-1) / Float62::from_integer(0),
+                Float62::from_float(f64::NEG_INFINITY)
+            );
+            assert!((Float62::from_integer(0) / Float62::from_integer(0)).is_nan());
             assert_eq!(
                 Float62::from_float(6.0) / Float62::from_integer(0),
                 Float62::from_float(f64::INFINITY)
